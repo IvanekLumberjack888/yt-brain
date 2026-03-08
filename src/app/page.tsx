@@ -7,6 +7,7 @@ type Video = {
   video_id: string
   title: string | null
   channel: string | null
+  transcript: string | null
   summary: string | null
   insights: {
     tldr?: string
@@ -45,6 +46,8 @@ function VideoCard({ video, onSummarize, onStatusChange, onClick, isLoading }: {
   onClick: (v: Video) => void
   isLoading: boolean
 }) {
+  const hasTranscript = !!video.transcript && video.transcript.length > 0
+
   return (
     <div className={`video-card${video.status === 'skip' ? ' skipped' : ''}`} onClick={() => onClick(video)}>
       <div className="thumb-wrap">
@@ -59,6 +62,9 @@ function VideoCard({ video, onSummarize, onStatusChange, onClick, isLoading }: {
           <div className="card-title">{video.title ?? 'Načítám...'}</div>
           {video.channel && <div className="card-channel">{video.channel}</div>}
         </div>
+        {!hasTranscript && !video.summary && (
+          <div style={{ fontSize: '0.7rem', color: '#6b6b8a', marginTop: 4 }}>⚠️ Bez transcriptu</div>
+        )}
         {video.summary && <div className="card-summary">{video.summary}</div>}
         {video.tags && video.tags.length > 0 && (
           <div className="card-tags">{video.tags.slice(0, 3).map(t => <span key={t} className="tag">{t}</span>)}</div>
@@ -77,7 +83,16 @@ function VideoCard({ video, onSummarize, onStatusChange, onClick, isLoading }: {
             <option value="skip">⏭️ Skip</option>
           </select>
           {!video.summary
-            ? <button className="summarize-btn" disabled={isLoading} onClick={() => onSummarize(video.id)}>{isLoading ? '...' : '⚡ Summarize'}</button>
+            ? (
+              <button
+                className="summarize-btn"
+                disabled={isLoading || !hasTranscript}
+                title={!hasTranscript ? 'Transcript není dostupný' : ''}
+                onClick={() => onSummarize(video.id)}
+              >
+                {isLoading ? '...' : '⚡ Summarize'}
+              </button>
+            )
             : <span className="processed-badge">✓ done</span>
           }
         </div>
@@ -184,7 +199,8 @@ export default function Home() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      notify('ok', data.cached ? 'Už v databázi ✓' : 'Transcript stažen ✓')
+      if (data.warning) notify('ok', `Video přidáno ⚠️ ${data.warning}`)
+      else notify('ok', data.cached ? 'Už v databázi ✓' : 'Transcript stažen ✓')
       setUrlInput('')
       loadVideos()
     } catch (e) { notify('err', e instanceof Error ? e.message : 'Chyba') } finally { setFetchingUrl(false) }
