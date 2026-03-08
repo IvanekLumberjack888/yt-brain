@@ -12,14 +12,32 @@ export async function POST(req: NextRequest) {
 
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`
 
-    // Už existuje v DB?
+    // Existuje v DB?
     const existing = await sql`
       SELECT id, video_id, title, channel, transcript, summary, insights, tags, priority, status, created_at, processed_at
       FROM videos WHERE video_id = ${videoId} LIMIT 1
     `
-    if (existing.length > 0) return NextResponse.json({ video: existing[0], cached: true })
 
-    // Metadata vždy fetchni
+    // Cached ale title/channel chybí → re-fetch metadata a updatuj
+    if (existing.length > 0) {
+      const row = existing[0]
+      if (!row.title || !row.channel) {
+        const meta = await fetchVideoMetadata(videoId)
+        if (meta?.title || meta?.channel) {
+          await sql`
+            UPDATE videos
+            SET title = COALESCE(${meta?.title ?? null}, title),
+                channel = COALESCE(${meta?.channel ?? null}, channel)
+            WHERE video_id = ${videoId}
+          `
+          row.title = meta?.title ?? row.title
+          row.channel = meta?.channel ?? row.channel
+        }
+      }
+      return NextResponse.json({ video: row, cached: true })
+    }
+
+    // Nové video — fetch metadata
     const meta = await fetchVideoMetadata(videoId)
 
     // Transcript je optional — pokud selže, video přidej bez něj
