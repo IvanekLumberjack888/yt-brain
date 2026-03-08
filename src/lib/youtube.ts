@@ -10,29 +10,76 @@ export function extractVideoId(url: string): string | null {
   return null
 }
 
-type TranscriptItem = { text: string; offset: number; duration: number }
-
 export async function fetchTranscript(videoId: string): Promise<{ transcript: string; lang: string }> {
-  const { YoutubeTranscript } = await import('youtube-transcript')
-  let transcriptData: TranscriptItem[]
-  let lang = 'en'
+  // Method 1: Try timedtext API directly
   try {
-    transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' })
-  } catch {
-    try {
-      transcriptData = await YoutubeTranscript.fetchTranscript(videoId)
-      lang = 'auto'
-    } catch {
-      throw new Error(`No transcript available for video ${videoId}. Video may be private or have captions disabled.`)
-    }
-  }
-  const transcript = transcriptData.map((item: TranscriptItem) => item.text.replace(/\n/g, ' ').trim()).filter(Boolean).join(' ')
+    const result = await fetchViaTimedText(videoId)
+    if (result) return result
+  } catch { /* continue */ }
+
+  // Method 2: Try youtube-transcript package
+  try {
+    const { YoutubeTranscript } = await import('youtube-transcript')
+    const data = await YoutubeTranscript.fetchTranscript(videoId)
+    const transcript = data.map((i: { text: string }) => i.text.replace(/\n/g, ' ').trim()).filter(Boolean).join(' ')
+    if (transcript.length > 100) return { transcript, lang: 'en' }
+  } catch { /* continue */ }
+
+  throw new Error(`No transcript available for video ${videoId}. The video may not have captions enabled.`)
+}
+
+async function fetchViaTimedText(videoId: string): Promise<{ transcript: string; lang: string } | null> {
+  // Fetch the video page to get caption track URLs
+  const pageRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+  })
+
+  if (!pageRes.ok) return null
+  const html = await pageRes.text()
+
+  // Extract captions data from ytInitialPlayerResponse
+  const captionsMatch = html.match(/"captions":(\{.*?\}),"videoDetails"/s)
+  if (!captionsMatch) return null
+
+  let captionsJson
+  try {
+    captionsJson = JSON.parse(captionsMatch[1])
+  } catch { return null }
+
+  const tracks = captionsJson?.playerCaptionsTracklistRenderer?.captionTracks
+  if (!tracks || tracks.length === 0) return null
+
+  // Prefer English, fallback to first available
+  const track = tracks.find((t: { languageCode: string }) => t.languageCode === 'en') || tracks[0]
+  const lang = track.languageCode || 'auto'
+
+  // Fetch the transcript XML
+  const transcriptRes = await fetch(track.baseUrl + '&fmt=json3')
+  if (!transcriptRes.ok) return null
+
+  const transcriptData = await transcriptRes.json()
+  const events = transcriptData?.events || []
+  
+  const transcript = events
+    .filter((e: { segs?: { utf8: string }[] }) => e.segs)
+    .map((e: { segs: { utf8: string }[] }) =>
+      e.segs.map((s) => s.utf8).join('').replace(/\n/g, ' ').trim()
+    )
+    .filter(Boolean)
+    .join(' ')
+
+  if (transcript.length < 50) return null
   return { transcript, lang }
 }
 
 export async function fetchVideoMetadata(videoId: string): Promise<{ title: string; channel: string } | null> {
   try {
-    const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`, { next: { revalidate: 86400 } })
+    const res = await fetch(
+      `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+    )
     if (!res.ok) return null
     const data = await res.json()
     return { title: data.title ?? '', channel: data.author_name ?? '' }
