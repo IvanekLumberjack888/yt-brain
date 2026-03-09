@@ -18,7 +18,6 @@ export async function POST(req: NextRequest) {
       FROM videos WHERE video_id = ${videoId} LIMIT 1
     `
 
-    // Cached ale title/channel chybí → re-fetch metadata a updatuj
     if (existing.length > 0) {
       const row = existing[0]
       if (!row.title || !row.channel) {
@@ -37,10 +36,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ video: row, cached: true })
     }
 
-    // Nové video — fetch metadata
     const meta = await fetchVideoMetadata(videoId)
+    console.log('[transcript] metadata:', meta)
 
-    // Transcript je optional — pokud selže, video přidej bez něj
     let transcript: string | null = null
     let lang: string | null = null
     let transcriptWarning: string | null = null
@@ -49,8 +47,10 @@ export async function POST(req: NextRequest) {
       const result = await fetchTranscript(videoId)
       transcript = result.transcript || null
       lang = result.lang || null
+      console.log('[transcript] success, length:', transcript?.length)
     } catch (err) {
       transcriptWarning = err instanceof Error ? err.message : 'Transcript unavailable'
+      console.error('[transcript] FAILED:', transcriptWarning)
     }
 
     const inserted = await sql`
@@ -69,10 +69,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       video: inserted[0],
       cached: false,
-      ...(transcriptWarning ? { warning: transcriptWarning } : {})
+      ...(transcriptWarning ? { warning: transcriptWarning } : {})\
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('[transcript] route error:', message)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
