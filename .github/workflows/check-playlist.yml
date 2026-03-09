@@ -1,0 +1,30 @@
+name: Check YouTube Playlist
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-playlist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install google-api-python-client==2.115.0
+      - name: Check for new videos
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+          YT_PLAYLIST_ID: ${{ secrets.YT_PLAYLIST_ID }}
+        run: python brain/check_playlist.py
+      - name: Commit queue updates
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "bot: update video queue [skip ci]"
+          file_pattern: "data/queue.json data/processed_videos.json"
