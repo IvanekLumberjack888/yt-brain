@@ -12,6 +12,9 @@ TRANSCRIPTS_DIR = Path(__file__).parent.parent / "transcripts"
 QUEUE_FILE = DATA_DIR / "queue.json"
 PROCESSED_FILE = DATA_DIR / "processed_videos.json"
 
+# Languages to try in order of preference
+LANG_PRIORITY = ["en", "cs", "sk"]
+
 
 def load_json(path: Path, default):
     if path.exists():
@@ -31,26 +34,45 @@ def slugify(text: str) -> str:
     return text[:60].strip("-")
 
 
-def fetch_transcript(video_id: str) -> str | None:
+def fetch_transcript(video_id: str) -> tuple[str, str] | tuple[None, None]:
+    """Returns (transcript_text, lang) or (None, None)."""
+    ytt = YouTubeTranscriptApi()
+
+    # Try preferred languages first
+    for lang in LANG_PRIORITY:
+        try:
+            entries = ytt.fetch(video_id, languages=[lang])
+            text = _merge_entries(entries)
+            if text:
+                return text, lang
+        except Exception:
+            continue
+
+    # Fallback: take whatever is available
     try:
-        ytt = YouTubeTranscriptApi()
         entries = ytt.fetch(video_id)
-        # Merge into readable paragraphs (~30s chunks)
-        paragraphs, chunk, chunk_start = [], [], 0.0
-        for e in entries:
-            if e.start - chunk_start > 30 and chunk:
-                paragraphs.append(" ".join(chunk))
-                chunk, chunk_start = [], e.start
-            chunk.append(e.text.replace("\n", " ").strip())
-        if chunk:
-            paragraphs.append(" ".join(chunk))
-        return "\n\n".join(paragraphs)
+        text = _merge_entries(entries)
+        if text:
+            return text, "auto"
     except Exception as exc:
         print(f"  ! Transcript error: {exc}")
-        return None
+
+    return None, None
 
 
-def save_markdown(video: dict, transcript: str | None) -> Path:
+def _merge_entries(entries) -> str:
+    paragraphs, chunk, chunk_start = [], [], 0.0
+    for e in entries:
+        if e.start - chunk_start > 30 and chunk:
+            paragraphs.append(" ".join(chunk))
+            chunk, chunk_start = [], e.start
+        chunk.append(e.text.replace("\n", " ").strip())
+    if chunk:
+        paragraphs.append(" ".join(chunk))
+    return "\n\n".join(paragraphs)
+
+
+def save_markdown(video: dict, transcript: str | None, lang: str | None) -> Path:
     year = date.today().strftime("%Y")
     out_dir = TRANSCRIPTS_DIR / year
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -66,6 +88,7 @@ video_url: "{video.get('url', '')}"
 video_id: "{video['video_id']}"
 date_added: "{video.get('published_at', '')[:10]}"
 date_processed: "{date.today().isoformat()}"
+lang: "{lang or 'none'}"
 has_transcript: {str(transcript is not None).lower()}
 ---
 
@@ -93,14 +116,14 @@ def main():
     for video in queue:
         vid_id = video["video_id"]
         print(f"Processing: {video.get('title', vid_id)}")
-        transcript = fetch_transcript(vid_id)
-        filepath = save_markdown(video, transcript)
-        status = "✓ transcript" if transcript else "✗ no transcript"
+        transcript, lang = fetch_transcript(vid_id)
+        filepath = save_markdown(video, transcript, lang)
+        status = f"✓ transcript [{lang}]" if transcript else "✗ no transcript"
         print(f"  {status} → {filepath.name}")
         processed.add(vid_id)
 
     save_json(PROCESSED_FILE, list(processed))
-    save_json(QUEUE_FILE, [])  # clear queue
+    save_json(QUEUE_FILE, [])
     print(f"\nDone. {len(queue)} videos processed.")
     print("Now run: git add . && git commit -m 'transcripts' && git push")
 
