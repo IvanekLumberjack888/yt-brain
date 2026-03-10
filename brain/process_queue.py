@@ -35,28 +35,47 @@ def slugify(text: str) -> str:
 
 
 def fetch_transcript(video_id: str) -> tuple[str, str] | tuple[None, None]:
-    """Returns (transcript_text, lang) or (None, None)."""
+    """Returns (transcript_text, lang) or (None, None).
+    Uses list_transcripts() to find available languages, then fetches the best one.
+    """
     ytt = YouTubeTranscriptApi()
+
+    try:
+        transcript_list = ytt.list(video_id)
+    except Exception as exc:
+        print(f"  ! Could not list transcripts: {exc}")
+        return None, None
+
+    # Build map: lang_code -> transcript object
+    available = {}
+    for t in transcript_list:
+        available[t.language_code] = t
+
+    print(f"  Available languages: {list(available.keys())}")
 
     # Try preferred languages first
     for lang in LANG_PRIORITY:
+        if lang in available:
+            try:
+                entries = available[lang].fetch()
+                text = _merge_entries(entries)
+                if text:
+                    return text, lang
+            except Exception as exc:
+                print(f"  ! Fetch failed for {lang}: {exc}")
+                continue
+
+    # Fallback: take first available
+    for lang_code, t in available.items():
         try:
-            entries = ytt.fetch(video_id, languages=[lang])
+            entries = t.fetch()
             text = _merge_entries(entries)
             if text:
-                return text, lang
+                return text, lang_code
         except Exception:
             continue
 
-    # Fallback: take whatever is available
-    try:
-        entries = ytt.fetch(video_id)
-        text = _merge_entries(entries)
-        if text:
-            return text, "auto"
-    except Exception as exc:
-        print(f"  ! Transcript error: {exc}")
-
+    print(f"  ! All transcript fetches failed")
     return None, None
 
 
