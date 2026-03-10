@@ -10,20 +10,21 @@
     "db:push": "node src/lib/db-migrate.js"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.3.1",
+    "lucide-react": "^0.469.0",
     "next": "15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@neondatabase/serverless": "^0.10.4",
-    "youtube-transcript": "^1.2.1",
-    "lucide-react": "^0.469.0",
-    "clsx": "^2.1.1"
+    "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5",
     "eslint": "^8",
-    "eslint-config-next": "15.1.0"
+    "eslint-config-next": "15.1.0",
+    "typescript": "^5"
   }
 }
