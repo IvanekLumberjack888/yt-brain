@@ -5,7 +5,9 @@ import json
 import re
 from datetime import date
 from pathlib import Path
+
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.proxies import GenericProxyConfig
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 TRANSCRIPTS_DIR = Path(__file__).parent.parent / "transcripts"
@@ -34,26 +36,76 @@ def slugify(text: str) -> str:
     return text[:60].strip("-")
 
 
+def _make_ytt():
+    """Create YouTubeTranscriptApi instance, optionally with Chrome cookies."""
+    try:
+        import browser_cookie3
+        cookies = browser_cookie3.chrome(domain_name=".youtube.com")
+        ytt = YouTubeTranscriptApi(cookie_path=None, http_client=None)
+        # Use requests session with cookies
+        import requests
+        session = requests.Session()
+        session.cookies = cookies
+        ytt = YouTubeTranscriptApi()
+        ytt._http_client._session = session
+        print("  [using Chrome cookies]")
+        return ytt
+    except Exception:
+        return YouTubeTranscriptApi()
+
+
 def fetch_transcript(video_id: str) -> tuple[str, str] | tuple[None, None]:
     """Returns (transcript_text, lang) or (None, None).
-    Uses list_transcripts() to find available languages, then fetches the best one.
+    Uses list() to find available languages, then fetches the best one.
     """
-    ytt = YouTubeTranscriptApi()
+    # Try with cookies first, then without
+    for use_cookies in [True, False]:
+        ytt = _try_build_ytt(use_cookies)
+        result = _fetch_with_ytt(ytt, video_id, use_cookies)
+        if result[0] is not None:
+            return result
 
+    print("  ! All transcript fetches failed")
+    return None, None
+
+
+def _try_build_ytt(use_cookies: bool):
+    if not use_cookies:
+        return YouTubeTranscriptApi()
+    try:
+        import browser_cookie3
+        import requests
+        cookies = browser_cookie3.chrome(domain_name=".youtube.com")
+        cookie_dict = {c.name: c.value for c in cookies}
+        # Write temp netscape cookies file
+        tmp = Path("data/_cookies.txt")
+        tmp.parent.mkdir(exist_ok=True)
+        lines = ["# Netscape HTTP Cookie File\n"]
+        for c in cookies:
+            lines.append(
+                f".youtube.com\tTRUE\t/\t"
+                f"{'TRUE' if c.secure else 'FALSE'}\t"
+                f"{int(c.expires) if c.expires else 0}\t"
+                f"{c.name}\t{c.value}\n"
+            )
+        tmp.write_text("".join(lines), encoding="utf-8")
+        print("  [using Chrome cookies]")
+        return YouTubeTranscriptApi(cookie_path=str(tmp))
+    except Exception as e:
+        print(f"  [cookies unavailable: {e}]")
+        return YouTubeTranscriptApi()
+
+
+def _fetch_with_ytt(ytt, video_id: str, label: bool) -> tuple:
     try:
         transcript_list = ytt.list(video_id)
     except Exception as exc:
         print(f"  ! Could not list transcripts: {exc}")
         return None, None
 
-    # Build map: lang_code -> transcript object
-    available = {}
-    for t in transcript_list:
-        available[t.language_code] = t
-
+    available = {t.language_code: t for t in transcript_list}
     print(f"  Available languages: {list(available.keys())}")
 
-    # Try preferred languages first
     for lang in LANG_PRIORITY:
         if lang in available:
             try:
@@ -65,7 +117,6 @@ def fetch_transcript(video_id: str) -> tuple[str, str] | tuple[None, None]:
                 print(f"  ! Fetch failed for {lang}: {exc}")
                 continue
 
-    # Fallback: take first available
     for lang_code, t in available.items():
         try:
             entries = t.fetch()
@@ -75,7 +126,6 @@ def fetch_transcript(video_id: str) -> tuple[str, str] | tuple[None, None]:
         except Exception:
             continue
 
-    print(f"  ! All transcript fetches failed")
     return None, None
 
 
