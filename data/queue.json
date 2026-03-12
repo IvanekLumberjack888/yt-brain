@@ -131,5 +131,61 @@
     "channel": "Jason Wardrop",
     "published_at": "2026-03-10T21:53:26Z",
     "url": "https://youtube.com/watch?v=ooQp9FGsOFw"
+  },
+  {
+    "video_id": "DqjBbAr3oTo",
+    "title": "Anthropic Just Dropped the Feature Nobody Knew They Needed",
+    "channel": "Ray Amjad",
+    "published_at": "2026-03-11T20:59:29Z",
+    "url": "https://youtube.com/watch?v=DqjBbAr3oTo"
+  },
+  {
+    "video_id": "nJ-uRyqZFFg",
+    "title": "Anthropic's New Plugin Lets You Control AI Visually (Playground)",
+    "channel": "Nick Puru | AI Automation",
+    "published_at": "2026-03-11T20:59:50Z",
+    "url": "https://youtube.com/watch?v=nJ-uRyqZFFg"
+  },
+  {
+    "video_id": "yGkkIu0Jkbc",
+    "title": "Stop Paying Anthropic $200/month for Claude Code (2 Alternatives)",
+    "channel": "Matt Penny | Applied AI",
+    "published_at": "2026-03-11T21:00:32Z",
+    "url": "https://youtube.com/watch?v=yGkkIu0Jkbc"
+  },
+  {
+    "video_id": "hem5D1uvy-w",
+    "title": "Google's New Model + Claude Code Just Changed RAG Forever",
+    "channel": "Nate Herk | AI Automation",
+    "published_at": "2026-03-11T21:00:40Z",
+    "url": "https://youtube.com/watch?v=hem5D1uvy-w"
+  },
+  {
+    "video_id": "qU51rp1p1U4",
+    "title": "Zaměstnáváme 150 AI agentů. Jak to funguje? | Václav Faraga, Able",
+    "channel": "BusinessInfo.cz",
+    "published_at": "2026-03-11T21:01:31Z",
+    "url": "https://youtube.com/watch?v=qU51rp1p1U4"
+  },
+  {
+    "video_id": "mi4hcipESKQ",
+    "title": "Turn Claude Code Into Your Executive Assistant in 27 Mins",
+    "channel": "Nate Herk | AI Automation",
+    "published_at": "2026-03-11T21:01:43Z",
+    "url": "https://youtube.com/watch?v=mi4hcipESKQ"
+  },
+  {
+    "video_id": "PwC-deqMYcA",
+    "title": "How to Start a 1-Person AI Business with Claude Code",
+    "channel": "Ritesh Verma",
+    "published_at": "2026-03-11T21:01:51Z",
+    "url": "https://youtube.com/watch?v=PwC-deqMYcA"
+  },
+  {
+    "video_id": "oWEDq1YsWiM",
+    "title": "𝗔𝗻𝘁𝗵𝗿𝗼𝗽𝗶𝗰 𝗝𝘂𝘀𝘁 𝗥𝗲𝗹𝗲𝗮𝘀𝗲𝗱 𝗮 𝗥𝗲𝗱 𝗟𝗶𝘀𝘁 𝗼𝗳 𝟭𝟬 𝗝𝗼𝗯𝘀 𝗔𝗜 𝗪𝗶𝗹𝗹 𝗗𝗲𝘀𝘁𝗿𝗼𝘆",
+    "channel": "FrontLinesMedia",
+    "published_at": "2026-03-11T21:04:08Z",
+    "url": "https://youtube.com/watch?v=oWEDq1YsWiM"
   }
 ]
