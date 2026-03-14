@@ -187,5 +187,803 @@
     "channel": "FrontLinesMedia",
     "published_at": "2026-03-11T21:04:08Z",
     "url": "https://youtube.com/watch?v=oWEDq1YsWiM"
+  },
+  {
+    "video_id": "EWvNQjAaOHw",
+    "title": "How I use LLMs",
+    "channel": "Andrej Karpathy",
+    "published_at": "2026-03-13T09:16:27Z",
+    "url": "https://youtube.com/watch?v=EWvNQjAaOHw"
+  },
+  {
+    "video_id": "qb90PPbAWz4",
+    "title": "Karpathy's \"autoresearch\" broke the internet",
+    "channel": "Greg Isenberg",
+    "published_at": "2026-03-13T09:16:55Z",
+    "url": "https://youtube.com/watch?v=qb90PPbAWz4"
+  },
+  {
+    "video_id": "F4zSxfBe5R0",
+    "title": "Claude Code 2.0 Has Arrived (It’s Insane)",
+    "channel": "Simon Scrapes",
+    "published_at": "2026-03-13T09:25:35Z",
+    "url": "https://youtube.com/watch?v=F4zSxfBe5R0"
+  },
+  {
+    "video_id": "vou38sa3IFY",
+    "title": "The NEW Claude Visualizer Just Replaced Entire Startups",
+    "channel": "Leonardo Grigorio | Build & Ship with AI",
+    "published_at": "2026-03-13T09:29:10Z",
+    "url": "https://youtube.com/watch?v=vou38sa3IFY"
+  },
+  {
+    "video_id": "VzpmXeqizbk",
+    "title": "Agentic/Vibe Coders: Stop Ignoring Caching! 10x your website's Speed",
+    "channel": "Leonardo Grigorio | Build & Ship with AI",
+    "published_at": "2026-03-13T09:29:50Z",
+    "url": "https://youtube.com/watch?v=VzpmXeqizbk"
+  },
+  {
+    "video_id": "ERdw3Z1NnI0",
+    "title": "Use THIS n8n Node To Auto-Enrich Google Sheets (Free Workflow)",
+    "channel": "Leonardo Grigorio | Build & Ship with AI",
+    "published_at": "2026-03-13T09:30:06Z",
+    "url": "https://youtube.com/watch?v=ERdw3Z1NnI0"
+  },
+  {
+    "video_id": "mHGKUS4uogU",
+    "title": "Why Habits Have Never Worked for Me.",
+    "channel": "Tiago Forte",
+    "published_at": "2026-03-13T09:31:45Z",
+    "url": "https://youtube.com/watch?v=mHGKUS4uogU"
+  },
+  {
+    "video_id": "Kd_aCn-qBks",
+    "title": "AI Builds App:  Second Brain & Claude Cowork Experiment (No Coding)",
+    "channel": "Tiago Forte",
+    "published_at": "2026-03-13T09:31:58Z",
+    "url": "https://youtube.com/watch?v=Kd_aCn-qBks"
+  },
+  {
+    "video_id": "SeC5E-SCdXg",
+    "title": "AI Chatbots: Great Ideas, ZERO Results  Where's the Value",
+    "channel": "Tiago Forte",
+    "published_at": "2026-03-13T09:32:23Z",
+    "url": "https://youtube.com/watch?v=SeC5E-SCdXg"
+  },
+  {
+    "video_id": "S_M4ocbt3RE",
+    "title": "Tired of Lost Notes? The Simple System to Organize Everything!",
+    "channel": "Tiago Forte",
+    "published_at": "2026-03-13T09:32:46Z",
+    "url": "https://youtube.com/watch?v=S_M4ocbt3RE"
+  },
+  {
+    "video_id": "tOS53fSDqVw",
+    "title": "Note-Taking Newbie? Your 30-Day Plan to Master Any App!",
+    "channel": "Tiago Forte",
+    "published_at": "2026-03-13T09:32:54Z",
+    "url": "https://youtube.com/watch?v=tOS53fSDqVw"
+  },
+  {
+    "video_id": "Ii99RU3mOJM",
+    "title": "Claude can now show you",
+    "channel": "Claude",
+    "published_at": "2026-03-13T10:08:59Z",
+    "url": "https://youtube.com/watch?v=Ii99RU3mOJM"
+  },
+  {
+    "video_id": "w-XPlC3a2oI",
+    "title": "If I Wanted to Build a $10M AI Business (Zero Employees), I'd Do This",
+    "channel": "Dan Martell",
+    "published_at": "2026-03-13T10:10:18Z",
+    "url": "https://youtube.com/watch?v=w-XPlC3a2oI"
+  },
+  {
+    "video_id": "CXeCIgc982I",
+    "title": "The Claude Code Skills Trap (Most People Fall For This)",
+    "channel": "Simon Scrapes",
+    "published_at": "2026-03-13T10:15:49Z",
+    "url": "https://youtube.com/watch?v=CXeCIgc982I"
+  },
+  {
+    "video_id": "50y0N1vnH0Y",
+    "title": "How to Create Architecture Diagrams with MCP: Claude, Draw.io & Excalidraw !",
+    "channel": "TechyTacos",
+    "published_at": "2026-03-13T10:21:36Z",
+    "url": "https://youtube.com/watch?v=50y0N1vnH0Y"
+  },
+  {
+    "video_id": "qVajpj_1eDQ",
+    "title": "Stop Vibe Coding (Do This Instead)",
+    "channel": "Luuk Alleman",
+    "published_at": "2026-03-13T10:22:32Z",
+    "url": "https://youtube.com/watch?v=qVajpj_1eDQ"
+  },
+  {
+    "video_id": "X5zTCgPN_D4",
+    "title": "What is Databricks? The Story Behind the Modern Data Platform (Visual Explanation)",
+    "channel": "Data with Baraa",
+    "published_at": "2026-03-13T10:22:50Z",
+    "url": "https://youtube.com/watch?v=X5zTCgPN_D4"
+  },
+  {
+    "video_id": "dg7YIfQ3wzc",
+    "title": "\"I Had No Idea This Existed\" | Claude's New Voice Mode for English Practice",
+    "channel": "Cloud English",
+    "published_at": "2026-03-13T10:23:17Z",
+    "url": "https://youtube.com/watch?v=dg7YIfQ3wzc"
+  },
+  {
+    "video_id": "Dt2bKKo4jMA",
+    "title": "Super Realistic Isometric Infographics with Gemini in 30 secs!",
+    "channel": "Educraft",
+    "published_at": "2026-03-13T10:23:41Z",
+    "url": "https://youtube.com/watch?v=Dt2bKKo4jMA"
+  },
+  {
+    "video_id": "Nl43duXzPhM",
+    "title": "Claude Skills Just Changed AI Agents Forever!",
+    "channel": "Samin Yasar",
+    "published_at": "2026-03-13T10:25:52Z",
+    "url": "https://youtube.com/watch?v=Nl43duXzPhM"
+  },
+  {
+    "video_id": "nVnxG10D5W0",
+    "title": "9 AI Concepts Explained in 7 minutes: AI Agents, RAGs, Tokenization, RLHF, Diffusion, LoRA...",
+    "channel": "ByteByteAI",
+    "published_at": "2026-03-13T10:27:04Z",
+    "url": "https://youtube.com/watch?v=nVnxG10D5W0"
+  },
+  {
+    "video_id": "NdtsVS5SCh0",
+    "title": "🚀 Introducing Genspark AI Workspace 3.0: Your First AI Employee",
+    "channel": "Genspark Products & Guides",
+    "published_at": "2026-03-13T10:35:18Z",
+    "url": "https://youtube.com/watch?v=NdtsVS5SCh0"
+  },
+  {
+    "video_id": "ffi3x6iZVKY",
+    "title": "Google právě přepsal Mapy. Tohle je obří AI update | Tomáš AI 🇨🇿",
+    "channel": "Tomáš AI 🇨🇿",
+    "published_at": "2026-03-13T10:36:59Z",
+    "url": "https://youtube.com/watch?v=ffi3x6iZVKY"
+  },
+  {
+    "video_id": "dKGSdkMVrY4",
+    "title": "50,000 SAP ABAP Programmers About to Lose Everything | Here's Why",
+    "channel": "Noel DCosta | ERP & AI Strategy",
+    "published_at": "2026-03-13T10:37:51Z",
+    "url": "https://youtube.com/watch?v=dKGSdkMVrY4"
+  },
+  {
+    "video_id": "Jv9mib9Hzi4",
+    "title": "6. AI Use case: Máte chaos v poznámkách? Postavte si AI druhý mozek v Apple ekosystému",
+    "channel": "AI v kostce",
+    "published_at": "2026-03-13T10:39:15Z",
+    "url": "https://youtube.com/watch?v=Jv9mib9Hzi4"
+  },
+  {
+    "video_id": "ZbKNpn0woDY",
+    "title": "Claude Code's New Upgrade: /btw",
+    "channel": "Nick Saraev",
+    "published_at": "2026-03-13T10:40:36Z",
+    "url": "https://youtube.com/watch?v=ZbKNpn0woDY"
+  },
+  {
+    "video_id": "pvxNcQTcIy4",
+    "title": "Agent Skills or MCP in the era of Claude Code?",
+    "channel": "Confluent Developer",
+    "published_at": "2026-03-13T10:40:56Z",
+    "url": "https://youtube.com/watch?v=pvxNcQTcIy4"
+  },
+  {
+    "video_id": "B37jv0rzSnc",
+    "title": "NEW Claude Code Upgrade: /btw + /voice",
+    "channel": "Duncan Rogoff | AI Automation",
+    "published_at": "2026-03-13T10:41:56Z",
+    "url": "https://youtube.com/watch?v=B37jv0rzSnc"
+  },
+  {
+    "video_id": "TZUTe7s11-I",
+    "title": "Claude Code + Nano Banana 2 = Insane $10,000 Websites",
+    "channel": "Jack Roberts",
+    "published_at": "2026-03-13T10:42:26Z",
+    "url": "https://youtube.com/watch?v=TZUTe7s11-I"
+  },
+  {
+    "video_id": "wVe3XOnio7M",
+    "title": "The \"PI\" (coding) agent is so much more than just another amazing coding agent!",
+    "channel": "Maximilian Schwarzmüller",
+    "published_at": "2026-03-13T10:42:44Z",
+    "url": "https://youtube.com/watch?v=wVe3XOnio7M"
+  },
+  {
+    "video_id": "BFNZtEORTDs",
+    "title": "The Official Raspberry Pi Beginner's Guide OUT NOW!",
+    "channel": "Raspberry Pi",
+    "published_at": "2026-03-13T10:43:40Z",
+    "url": "https://youtube.com/watch?v=BFNZtEORTDs"
+  },
+  {
+    "video_id": "biNF3GcVJ-A",
+    "title": "Build Your Second Brain with BrainyBox | Full Stack Project (React, Node.js,MongoDB)| Harkirat Singh",
+    "channel": "TechTalesByAftab",
+    "published_at": "2026-03-13T10:44:43Z",
+    "url": "https://youtube.com/watch?v=biNF3GcVJ-A"
+  },
+  {
+    "video_id": "g6GbJpVppqo",
+    "title": "Building a Second Brain by Tiago Forte (complete Summary)",
+    "channel": "Keynote Knowledge",
+    "published_at": "2026-03-13T10:45:14Z",
+    "url": "https://youtube.com/watch?v=g6GbJpVppqo"
+  },
+  {
+    "video_id": "ti0KdGYPLNQ",
+    "title": "GLM 5 (Lite Coding Plan) + Skills + Pi : This $3 Setup BEATS Claude Code & Codex!!!",
+    "channel": "AICodeKing",
+    "published_at": "2026-03-13T10:50:04Z",
+    "url": "https://youtube.com/watch?v=ti0KdGYPLNQ"
+  },
+  {
+    "video_id": "i_qlilrH-i0",
+    "title": "Stop Buying Expensive NAS – ZimaBoard 2 PC",
+    "channel": "Mini PC Builder",
+    "published_at": "2026-03-13T10:50:20Z",
+    "url": "https://youtube.com/watch?v=i_qlilrH-i0"
+  },
+  {
+    "video_id": "wEsjK3Smovw",
+    "title": "From Writing Code to Managing Agents. Most Engineers Aren't Ready | Stanford University, Mihail Eric",
+    "channel": "EO",
+    "published_at": "2026-03-13T10:50:34Z",
+    "url": "https://youtube.com/watch?v=wEsjK3Smovw"
+  },
+  {
+    "video_id": "8I_yeica3r4",
+    "title": "AI Coding Is Making Devs Miserable (2026 Predictions)",
+    "channel": "theSeniorDev",
+    "published_at": "2026-03-13T10:53:34Z",
+    "url": "https://youtube.com/watch?v=8I_yeica3r4"
+  },
+  {
+    "video_id": "RU_ZcKzFdG0",
+    "title": "Don’t Use Python Without These 8 Tools",
+    "channel": "Coding with Lewis",
+    "published_at": "2026-03-13T10:57:40Z",
+    "url": "https://youtube.com/watch?v=RU_ZcKzFdG0"
+  },
+  {
+    "video_id": "tUFt9Sjk2Bk",
+    "title": "Claude Code + Antigravity Creates Insane Lead Magnets",
+    "channel": "Ryan Mathews",
+    "published_at": "2026-03-13T10:58:51Z",
+    "url": "https://youtube.com/watch?v=tUFt9Sjk2Bk"
+  },
+  {
+    "video_id": "f3rDD5I53Bk",
+    "title": "This Free Repo Replaces Your Entire Team | Agency Agents + Claude Code",
+    "channel": "FuturMinds",
+    "published_at": "2026-03-13T10:59:26Z",
+    "url": "https://youtube.com/watch?v=f3rDD5I53Bk"
+  },
+  {
+    "video_id": "9QDu6wpR59o",
+    "title": "The OFFICIAL Notion Second Brain Setup",
+    "channel": "Tiago Forte",
+    "published_at": "2026-03-13T10:59:46Z",
+    "url": "https://youtube.com/watch?v=9QDu6wpR59o"
+  },
+  {
+    "video_id": "Kqk_i1rkWgg",
+    "title": "Launch 20+ AI Agents in SECONDS (Claude Code CLUSTER)",
+    "channel": "Stephen G. Pope",
+    "published_at": "2026-03-13T11:00:22Z",
+    "url": "https://youtube.com/watch?v=Kqk_i1rkWgg"
+  },
+  {
+    "video_id": "ZNIsMt8LMF0",
+    "title": "Qwen3.5 + Claude-4.6-Opus-Reasoning = Another Anthropic FREE Open Source Claude Model",
+    "channel": "Codedigipt",
+    "published_at": "2026-03-13T11:00:33Z",
+    "url": "https://youtube.com/watch?v=ZNIsMt8LMF0"
+  },
+  {
+    "video_id": "0XIH3fgjTY4",
+    "title": "STOP Paying $200/Month for Claude Code (Use This Instead)",
+    "channel": "FuturMinds",
+    "published_at": "2026-03-13T11:01:27Z",
+    "url": "https://youtube.com/watch?v=0XIH3fgjTY4"
+  },
+  {
+    "video_id": "I-BERqPprrc",
+    "title": "He Built a $5.5B Legal AI Company by 26 | Legora, Max Junestrand",
+    "channel": "EO",
+    "published_at": "2026-03-13T11:04:12Z",
+    "url": "https://youtube.com/watch?v=I-BERqPprrc"
+  },
+  {
+    "video_id": "YTBaj3JfgEo",
+    "title": "7 Certificate Combinations That Make You IRRESISTIBLE To Companies",
+    "channel": "Shane Hummus",
+    "published_at": "2026-03-13T12:46:28Z",
+    "url": "https://youtube.com/watch?v=YTBaj3JfgEo"
+  },
+  {
+    "video_id": "MH-IMJxbUY4",
+    "title": "Building a $12,000,000 Business for a Stranger in 25 Minutes",
+    "channel": "Alex Hormozi",
+    "published_at": "2026-03-13T12:58:57Z",
+    "url": "https://youtube.com/watch?v=MH-IMJxbUY4"
+  },
+  {
+    "video_id": "MpQZ4lK5rME",
+    "title": "Google Just Made Claude Code 10x More Useful",
+    "channel": "Nico | AI Ranking",
+    "published_at": "2026-03-13T13:02:09Z",
+    "url": "https://youtube.com/watch?v=MpQZ4lK5rME"
+  },
+  {
+    "video_id": "oupYhzY_JJY",
+    "title": "We Cracked The Code On Notion AI (here's how to make it work)",
+    "channel": "Matthias Frank",
+    "published_at": "2026-03-13T13:02:28Z",
+    "url": "https://youtube.com/watch?v=oupYhzY_JJY"
+  },
+  {
+    "video_id": "_xg9z3bY90E",
+    "title": "FIX Forward Head Posture in 4 minutes | Exercises for Hunchback Posture",
+    "channel": "Dr. Jon Saunders",
+    "published_at": "2026-03-13T13:04:14Z",
+    "url": "https://youtube.com/watch?v=_xg9z3bY90E"
+  },
+  {
+    "video_id": "pBASqUbZgkY",
+    "title": "Every Type of API Simply Explained in 9 Minutes!",
+    "channel": "Codist ",
+    "published_at": "2026-03-13T14:47:32Z",
+    "url": "https://youtube.com/watch?v=pBASqUbZgkY"
+  },
+  {
+    "video_id": "Gy2bAcMD3bs",
+    "title": "How Hackers Hack Chrome Passwords",
+    "channel": "Neurix",
+    "published_at": "2026-03-13T14:50:51Z",
+    "url": "https://youtube.com/watch?v=Gy2bAcMD3bs"
+  },
+  {
+    "video_id": "TI06AgTmxMc",
+    "title": "How to Master NotebookLM (Good Prompts Aren't Enough)",
+    "channel": "James Blue",
+    "published_at": "2026-03-13T14:52:35Z",
+    "url": "https://youtube.com/watch?v=TI06AgTmxMc"
+  },
+  {
+    "video_id": "ZlDnsf_DOzg",
+    "title": "Every Claude Code Concept Explained for Normal People",
+    "channel": "Simon Scrapes",
+    "published_at": "2026-03-13T14:53:17Z",
+    "url": "https://youtube.com/watch?v=ZlDnsf_DOzg"
+  },
+  {
+    "video_id": "japT66frdhM",
+    "title": "One Simple System Gave All My AI Tools a Memory. Here's How.",
+    "channel": "AI News & Strategy Daily | Nate B Jones",
+    "published_at": "2026-03-13T14:55:04Z",
+    "url": "https://youtube.com/watch?v=japT66frdhM"
+  },
+  {
+    "video_id": "bWH7Fnzv50c",
+    "title": "Why Most Software Developers Stay Stuck (I’ve Seen This for 25 Years)",
+    "channel": "The Serious CTO",
+    "published_at": "2026-03-13T14:56:12Z",
+    "url": "https://youtube.com/watch?v=bWH7Fnzv50c"
+  },
+  {
+    "video_id": "wEDPsK1G2uE",
+    "title": "From Developer to CTO: 3 Career Mistakes That Cost Me 20 Years (Learn Them in 10 Minutes)",
+    "channel": "The Serious CTO",
+    "published_at": "2026-03-13T14:56:34Z",
+    "url": "https://youtube.com/watch?v=wEDPsK1G2uE"
+  },
+  {
+    "video_id": "Bgwgj6TCntc",
+    "title": "From Burned-Out Junior Dev to CTO in 2 Years – The No-BS Guide They Don’t Teach You",
+    "channel": "The Serious CTO",
+    "published_at": "2026-03-13T14:56:48Z",
+    "url": "https://youtube.com/watch?v=Bgwgj6TCntc"
+  },
+  {
+    "video_id": "LcjiIdIoSUI",
+    "title": "Simple Life Lessons & Avoiding Complicated Mistakes",
+    "channel": "The Serious CTO",
+    "published_at": "2026-03-13T14:58:20Z",
+    "url": "https://youtube.com/watch?v=LcjiIdIoSUI"
+  },
+  {
+    "video_id": "AaEeS9JflWI",
+    "title": "Fix Your Dev Brain: 7 Mental Models You Should’ve Learned Sooner",
+    "channel": "The Serious CTO",
+    "published_at": "2026-03-13T14:59:06Z",
+    "url": "https://youtube.com/watch?v=AaEeS9JflWI"
+  },
+  {
+    "video_id": "GyHtjiAxVcE",
+    "title": "Master the 5-Minute Pause: Strategic Coding for 10x Impact",
+    "channel": "Engineer Abroad",
+    "published_at": "2026-03-13T15:00:03Z",
+    "url": "https://youtube.com/watch?v=GyHtjiAxVcE"
+  },
+  {
+    "video_id": "7kf1SACqlRw",
+    "title": "I was bad at Data Structures and Algorithms. Then I did this.",
+    "channel": "Andrew Codesmith",
+    "published_at": "2026-03-13T15:02:51Z",
+    "url": "https://youtube.com/watch?v=7kf1SACqlRw"
+  },
+  {
+    "video_id": "2RheMwrb0No",
+    "title": "How to Get Ahead with AI (While Others Lose Their Jobs)",
+    "channel": "James Blue",
+    "published_at": "2026-03-13T15:03:46Z",
+    "url": "https://youtube.com/watch?v=2RheMwrb0No"
+  },
+  {
+    "video_id": "YXhD5kjA5-8",
+    "title": "I Wasted 2 Years Learning Azure Wrong - Here's What I'd Do Different in 2026",
+    "channel": "Parveen Singh",
+    "published_at": "2026-03-13T15:07:04Z",
+    "url": "https://youtube.com/watch?v=YXhD5kjA5-8"
+  },
+  {
+    "video_id": "JN75APaI55M",
+    "title": "DON’T Become a Data Engineer - Do THIS Instead",
+    "channel": "Tech With Soleyman",
+    "published_at": "2026-03-13T15:08:59Z",
+    "url": "https://youtube.com/watch?v=JN75APaI55M"
+  },
+  {
+    "video_id": "sGbixee041A",
+    "title": "How to Disappear Online and Become Untraceable",
+    "channel": "Proton",
+    "published_at": "2026-03-13T15:11:51Z",
+    "url": "https://youtube.com/watch?v=sGbixee041A"
+  },
+  {
+    "video_id": "5m-C5mwpmxU",
+    "title": "The 3-2-1 Speaking Trick That Forces You To Stop Rambling!",
+    "channel": "Vinh Giang",
+    "published_at": "2026-03-13T15:12:28Z",
+    "url": "https://youtube.com/watch?v=5m-C5mwpmxU"
+  },
+  {
+    "video_id": "0H0I1bHVHBw",
+    "title": "Goodbye Vector DBs? Inside Google’s NEW “Always On” Memory Agent",
+    "channel": "Refreshing AI Latest",
+    "published_at": "2026-03-13T15:15:56Z",
+    "url": "https://youtube.com/watch?v=0H0I1bHVHBw"
+  },
+  {
+    "video_id": "KhbvebHWH20",
+    "title": "Unlock Your Subconscious Algorithm: A Japanese Engineer's Guide to Intuition",
+    "channel": "Engineer Abroad",
+    "published_at": "2026-03-13T15:16:29Z",
+    "url": "https://youtube.com/watch?v=KhbvebHWH20"
+  },
+  {
+    "video_id": "oTphk2SVHNc",
+    "title": "You Need to Stop “Prompting” Do THIS Instead",
+    "channel": "Cal Hyslop",
+    "published_at": "2026-03-13T15:17:04Z",
+    "url": "https://youtube.com/watch?v=oTphk2SVHNc"
+  },
+  {
+    "video_id": "i94z9-Emtgw",
+    "title": "Navigating the Unknown - How Tradeoffs Earn You a Seat at the Table",
+    "channel": "Corporate Playbooks",
+    "published_at": "2026-03-13T15:17:43Z",
+    "url": "https://youtube.com/watch?v=i94z9-Emtgw"
+  },
+  {
+    "video_id": "75ZuV_iGDlc",
+    "title": "Don't Rewrite! Smart Ways to Fix Legacy Code & Build Trust",
+    "channel": "Engineer Abroad",
+    "published_at": "2026-03-13T15:18:13Z",
+    "url": "https://youtube.com/watch?v=75ZuV_iGDlc"
+  },
+  {
+    "video_id": "Mj8apQpmMh0",
+    "title": "Refactor Your Communication: How to Thrive in Global Tech Teams",
+    "channel": "Engineer Abroad",
+    "published_at": "2026-03-13T15:20:26Z",
+    "url": "https://youtube.com/watch?v=Mj8apQpmMh0"
+  },
+  {
+    "video_id": "tXbd63Fy5oQ",
+    "title": "Stop Winning Arguments, Start Winning Trust: Essential Skills for Engineers Abroad",
+    "channel": "Engineer Abroad",
+    "published_at": "2026-03-13T15:21:18Z",
+    "url": "https://youtube.com/watch?v=tXbd63Fy5oQ"
+  },
+  {
+    "video_id": "6vDrThUjDOc",
+    "title": "What is Azure SRE Agent",
+    "channel": "Microsoft Azure",
+    "published_at": "2026-03-13T15:22:36Z",
+    "url": "https://youtube.com/watch?v=6vDrThUjDOc"
+  },
+  {
+    "video_id": "rR4n-0KYeKQ",
+    "title": "how we write/review code in big tech companies",
+    "channel": "Joma Tech",
+    "published_at": "2026-03-13T15:23:17Z",
+    "url": "https://youtube.com/watch?v=rR4n-0KYeKQ"
+  },
+  {
+    "video_id": "H9AIaMYEdqM",
+    "title": "100+ hours of Learning Claude Cowork in 15 minutes",
+    "channel": "Zinho Automates",
+    "published_at": "2026-03-13T15:24:28Z",
+    "url": "https://youtube.com/watch?v=H9AIaMYEdqM"
+  },
+  {
+    "video_id": "eE6yvtKLwvk",
+    "title": "STOP Taking Random AI Courses - Read These Books Instead",
+    "channel": "Egor Howell",
+    "published_at": "2026-03-13T15:24:48Z",
+    "url": "https://youtube.com/watch?v=eE6yvtKLwvk"
+  },
+  {
+    "video_id": "O9v10jQkm5c",
+    "title": "Data Structures Explained for Beginners - How I Wish I was Taught",
+    "channel": "Sajjaad Khader",
+    "published_at": "2026-03-13T15:25:12Z",
+    "url": "https://youtube.com/watch?v=O9v10jQkm5c"
+  },
+  {
+    "video_id": "0Hewey3quwM",
+    "title": "Stop Ignoring Technical Debt: A Japanese Engineer’s Guide to High-Quality Code",
+    "channel": "Engineer Abroad",
+    "published_at": "2026-03-13T15:26:24Z",
+    "url": "https://youtube.com/watch?v=0Hewey3quwM"
+  },
+  {
+    "video_id": "zSJYERR62FY",
+    "title": "Why Talking Too Much Makes You Look Weak",
+    "channel": "Luxury Academy",
+    "published_at": "2026-03-13T15:27:47Z",
+    "url": "https://youtube.com/watch?v=zSJYERR62FY"
+  },
+  {
+    "video_id": "U24y_QdPDZ4",
+    "title": "Using a Notebook (This Way) Still Beats Every Productivity App",
+    "channel": "Bullet Journal",
+    "published_at": "2026-03-13T15:28:32Z",
+    "url": "https://youtube.com/watch?v=U24y_QdPDZ4"
+  },
+  {
+    "video_id": "-npmitrAklk",
+    "title": "Best Coding Habits to Adopt Now (that I wish I did earlier)",
+    "channel": "Alex Hyett",
+    "published_at": "2026-03-13T15:38:49Z",
+    "url": "https://youtube.com/watch?v=-npmitrAklk"
+  },
+  {
+    "video_id": "KcTI98JWLwE",
+    "title": "Starting a New Job? Here's a 90-Day Plan from Harvard",
+    "channel": "Jeff Su",
+    "published_at": "2026-03-13T15:47:09Z",
+    "url": "https://youtube.com/watch?v=KcTI98JWLwE"
+  },
+  {
+    "video_id": "WgR6mUSsEig",
+    "title": "How to Succeed in Your New Job | The Way We Work, a TED series",
+    "channel": "TED",
+    "published_at": "2026-03-13T15:47:32Z",
+    "url": "https://youtube.com/watch?v=WgR6mUSsEig"
+  },
+  {
+    "video_id": "znku_lZ8mA4",
+    "title": "10 TIPS for STARTING A NEW JOB! (What to DO and SAY on your FIRST DAY AT WORK!)",
+    "channel": "CareerVidz",
+    "published_at": "2026-03-13T15:48:02Z",
+    "url": "https://youtube.com/watch?v=znku_lZ8mA4"
+  },
+  {
+    "video_id": "axUPDoza_9w",
+    "title": "Watch This Before Starting Your Corporate Career (what I wish I knew)",
+    "channel": "Emily Durham",
+    "published_at": "2026-03-13T15:48:40Z",
+    "url": "https://youtube.com/watch?v=axUPDoza_9w"
+  },
+  {
+    "video_id": "w2bMLvDk6t4",
+    "title": "5 Mistakes That RUIN Your First 30 Days at a New Job",
+    "channel": "Emily Durham",
+    "published_at": "2026-03-13T15:49:11Z",
+    "url": "https://youtube.com/watch?v=w2bMLvDk6t4"
+  },
+  {
+    "video_id": "JVN2QYxlcbg",
+    "title": "5 Things to do When Joining a New Company (as a Software Engineer)",
+    "channel": "A Dev' Story",
+    "published_at": "2026-03-13T15:49:35Z",
+    "url": "https://youtube.com/watch?v=JVN2QYxlcbg"
+  },
+  {
+    "video_id": "ToVaPg1AP6w",
+    "title": "Why you are so overwhelmed in your new job or role.",
+    "channel": "Erin Foley",
+    "published_at": "2026-03-13T15:50:22Z",
+    "url": "https://youtube.com/watch?v=ToVaPg1AP6w"
+  },
+  {
+    "video_id": "pdEp9Molymo",
+    "title": "Jordan Peterson How to Succeed in a New Job",
+    "channel": "Videos to Make You Think",
+    "published_at": "2026-03-13T15:50:41Z",
+    "url": "https://youtube.com/watch?v=pdEp9Molymo"
+  },
+  {
+    "video_id": "j9YeEQR8nKQ",
+    "title": "5 Things You MUST Do After Starting a New Job!",
+    "channel": "Jeff Su",
+    "published_at": "2026-03-13T15:51:28Z",
+    "url": "https://youtube.com/watch?v=j9YeEQR8nKQ"
+  },
+  {
+    "video_id": "WvGHbDpv24k",
+    "title": "6 High Income Skills That AI Won’t Replace in 2026",
+    "channel": "Dan Martell",
+    "published_at": "2026-03-13T15:53:40Z",
+    "url": "https://youtube.com/watch?v=WvGHbDpv24k"
+  },
+  {
+    "video_id": "RGaW82k4dK4",
+    "title": "It took me 10+ years to realize what I’ll tell you in 8 minutes",
+    "channel": "Web Developete",
+    "published_at": "2026-03-13T15:54:11Z",
+    "url": "https://youtube.com/watch?v=RGaW82k4dK4"
+  },
+  {
+    "video_id": "Q0pFER6FI4g",
+    "title": "What to Do in Your First 30 Days at a New Job...",
+    "channel": "Career Growth With Lucy",
+    "published_at": "2026-03-13T15:55:40Z",
+    "url": "https://youtube.com/watch?v=Q0pFER6FI4g"
+  },
+  {
+    "video_id": "jT6CBJcG1wc",
+    "title": "How to get Promoted FAST at your Job - Visibility at Work",
+    "channel": "Firm Learning",
+    "published_at": "2026-03-13T15:57:59Z",
+    "url": "https://youtube.com/watch?v=jT6CBJcG1wc"
+  },
+  {
+    "video_id": "6krjawpWMaM",
+    "title": "How to CONFIDENTLY Introduce Yourself to a New Team (with Examples!)",
+    "channel": "Kara Ronin",
+    "published_at": "2026-03-13T15:58:22Z",
+    "url": "https://youtube.com/watch?v=6krjawpWMaM"
+  },
+  {
+    "video_id": "HURh3a-FdB4",
+    "title": "How to Introduce Yourself in Meetings (Without Sounding Awkward)",
+    "channel": "Awfully Quiet",
+    "published_at": "2026-03-13T15:58:51Z",
+    "url": "https://youtube.com/watch?v=HURh3a-FdB4"
+  },
+  {
+    "video_id": "aLu3NazBbLw",
+    "title": "The First 90 Days, ft. Michael Watkins and Asha Aravindakshan, SF ’17",
+    "channel": "MIT Sloan Alumni",
+    "published_at": "2026-03-13T15:59:20Z",
+    "url": "https://youtube.com/watch?v=aLu3NazBbLw"
+  },
+  {
+    "video_id": "EW-TnCOE1KE",
+    "title": "Preparing for your first day at a new tech job (emotionally, mentally, and professionally)",
+    "channel": "mayuko",
+    "published_at": "2026-03-13T15:59:38Z",
+    "url": "https://youtube.com/watch?v=EW-TnCOE1KE"
+  },
+  {
+    "video_id": "VzEmOafPWOU",
+    "title": "First 9-5 Corporate Job? DO THESE THINGS before starting | Career Tips and Advice I wish I had known",
+    "channel": "Jac Williams",
+    "published_at": "2026-03-13T15:59:56Z",
+    "url": "https://youtube.com/watch?v=VzEmOafPWOU"
+  },
+  {
+    "video_id": "PEFso88LkC4",
+    "title": "My Honest Thoughts on AI and the Job Market in 2026 (No Hype)",
+    "channel": "Tech With Tim",
+    "published_at": "2026-03-13T16:00:44Z",
+    "url": "https://youtube.com/watch?v=PEFso88LkC4"
+  },
+  {
+    "video_id": "CkSjzcay8MI",
+    "title": "How to Make a Good First Impression When Starting a New Job [13 Things To Do]",
+    "channel": "Brandon Hill - Bizness Professionals",
+    "published_at": "2026-03-13T16:01:28Z",
+    "url": "https://youtube.com/watch?v=CkSjzcay8MI"
+  },
+  {
+    "video_id": "GB5qeNF9U-o",
+    "title": "How to Bullet Journal in 2026 (Every New Technique)",
+    "channel": "Bullet Journal",
+    "published_at": "2026-03-13T16:01:50Z",
+    "url": "https://youtube.com/watch?v=GB5qeNF9U-o"
+  },
+  {
+    "video_id": "TUKYbUIXLOE",
+    "title": "The 6 Levels of Claude Code Explained",
+    "channel": "Chase AI",
+    "published_at": "2026-03-13T16:04:30Z",
+    "url": "https://youtube.com/watch?v=TUKYbUIXLOE"
+  },
+  {
+    "video_id": "QJecmNC9qwU",
+    "title": "How To Bullet Journal For Beginners | The Monthly Ritual",
+    "channel": "Bullet Journal",
+    "published_at": "2026-03-13T16:05:39Z",
+    "url": "https://youtube.com/watch?v=QJecmNC9qwU"
+  },
+  {
+    "video_id": "DjEZM4RqaeY",
+    "title": "A 10-Minute Notebook Setup You'll Actually Use",
+    "channel": "Bullet Journal",
+    "published_at": "2026-03-13T16:12:29Z",
+    "url": "https://youtube.com/watch?v=DjEZM4RqaeY"
+  },
+  {
+    "video_id": "F3XsuBiIa7c",
+    "title": "Get Ahead of 99% of Your Coworkers By Working Less (Promotion Formula Explained)",
+    "channel": "Josh Brindley",
+    "published_at": "2026-03-13T16:13:14Z",
+    "url": "https://youtube.com/watch?v=F3XsuBiIa7c"
+  },
+  {
+    "video_id": "QPrymYfmrCU",
+    "title": "This book changed my life.",
+    "channel": "Dominic Hart",
+    "published_at": "2026-03-13T16:13:28Z",
+    "url": "https://youtube.com/watch?v=QPrymYfmrCU"
+  },
+  {
+    "video_id": "Sr9yRqOZMYU",
+    "title": "The only thing that stopped me from infinite scrolling",
+    "channel": "SwiftFilms",
+    "published_at": "2026-03-13T16:13:42Z",
+    "url": "https://youtube.com/watch?v=Sr9yRqOZMYU"
+  },
+  {
+    "video_id": "GW8MdjVsoDA",
+    "title": "What does a Technology Consultant do? (Deloitte, Accenture, IBM, McKinsey & Company)",
+    "channel": "Devamsha",
+    "published_at": "2026-03-13T16:15:09Z",
+    "url": "https://youtube.com/watch?v=GW8MdjVsoDA"
+  },
+  {
+    "video_id": "iLdQ0AU4mwo",
+    "title": "Business is hard until you build systems like this",
+    "channel": "Ross Harkness",
+    "published_at": "2026-03-13T16:15:55Z",
+    "url": "https://youtube.com/watch?v=iLdQ0AU4mwo"
+  },
+  {
+    "video_id": "YIl-awY250k",
+    "title": "What I'd Learn Instead of Automation in 2026",
+    "channel": "Nick Saraev",
+    "published_at": "2026-03-13T16:16:07Z",
+    "url": "https://youtube.com/watch?v=YIl-awY250k"
+  },
+  {
+    "video_id": "XlopZf5z30E",
+    "title": "What is an IT Automation Consultant?",
+    "channel": "EPIC IT Automations",
+    "published_at": "2026-03-13T16:18:04Z",
+    "url": "https://youtube.com/watch?v=XlopZf5z30E"
   }
 ]
