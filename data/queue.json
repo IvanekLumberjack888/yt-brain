@@ -1048,5 +1048,96 @@
     "channel": "Nick Saraev",
     "published_at": "2026-03-14T10:11:10Z",
     "url": "https://youtube.com/watch?v=qKU-e0x2EmE"
+  },
+  {
+    "video_id": "QUHrntlfPo4",
+    "title": "Claude Code is Expensive. This MCP Server Fixes It (Context Mode)",
+    "channel": "Better Stack",
+    "published_at": "2026-03-16T17:18:20Z",
+    "url": "https://youtube.com/watch?v=QUHrntlfPo4"
+  },
+  {
+    "video_id": "UvUFycWa_OI",
+    "title": "Claude Code 2.0 Je Konečně Tady!",
+    "channel": "Matěj Polívka",
+    "published_at": "2026-03-16T17:18:32Z",
+    "url": "https://youtube.com/watch?v=UvUFycWa_OI"
+  },
+  {
+    "video_id": "CxFQykWiJqY",
+    "title": "\"50 AI Agents Running My Company\" Is a Lie. Here's How I Build It | Gumloop, Max Brodeur-Urbas",
+    "channel": "EO",
+    "published_at": "2026-03-16T19:04:58Z",
+    "url": "https://youtube.com/watch?v=CxFQykWiJqY"
+  },
+  {
+    "video_id": "zCW-k5fFRgQ",
+    "title": "She quit, picked up AI, and shipped in 30 days what her team planned for Q3.",
+    "channel": "AI News & Strategy Daily | Nate B Jones",
+    "published_at": "2026-03-16T19:06:19Z",
+    "url": "https://youtube.com/watch?v=zCW-k5fFRgQ"
+  },
+  {
+    "video_id": "xdR4XD-Q8po",
+    "title": "I Taught Claude to Take Notes on Itself (Now It Gets Smarter Every Session)",
+    "channel": "Dylan Davis",
+    "published_at": "2026-03-16T19:10:27Z",
+    "url": "https://youtube.com/watch?v=xdR4XD-Q8po"
+  },
+  {
+    "video_id": "-O6MEtleOdA",
+    "title": "How to make Claude Code less dumb",
+    "channel": "Michia Rohrssen",
+    "published_at": "2026-03-16T19:11:20Z",
+    "url": "https://youtube.com/watch?v=-O6MEtleOdA"
+  },
+  {
+    "video_id": "ZXHrPfWJcCI",
+    "title": "How To Fix Your Attention Span (Before It's Too Late)",
+    "channel": "Daniel Pink",
+    "published_at": "2026-03-16T19:17:45Z",
+    "url": "https://youtube.com/watch?v=ZXHrPfWJcCI"
+  },
+  {
+    "video_id": "Xn-gtHDsaPY",
+    "title": "7 new open source AI tools you need right now…",
+    "channel": "Fireship",
+    "published_at": "2026-03-16T19:19:27Z",
+    "url": "https://youtube.com/watch?v=Xn-gtHDsaPY"
+  },
+  {
+    "video_id": "Ox6JDd55TdM",
+    "title": "AI replaced 80% of Coding, Only these 7 skills are left.",
+    "channel": "Sahil & Sarra",
+    "published_at": "2026-03-16T19:21:12Z",
+    "url": "https://youtube.com/watch?v=Ox6JDd55TdM"
+  },
+  {
+    "video_id": "NNv80mMzFDs",
+    "title": "Stop Making Ugly Websites with Claude Code",
+    "channel": "Ed Hill | AI Automation",
+    "published_at": "2026-03-16T19:23:16Z",
+    "url": "https://youtube.com/watch?v=NNv80mMzFDs"
+  },
+  {
+    "video_id": "CjEuLlfcnoc",
+    "title": "Did Claude Just Kill NotebookLM With This HIDDEN Feature?",
+    "channel": "Corey McClain",
+    "published_at": "2026-03-16T19:24:16Z",
+    "url": "https://youtube.com/watch?v=CjEuLlfcnoc"
+  },
+  {
+    "video_id": "gmbW_lXXIkc",
+    "title": "Google's Embedding 2 Is RAG on Steroids (But Everyone is Getting it Wrong)",
+    "channel": "Chase AI",
+    "published_at": "2026-03-16T19:28:34Z",
+    "url": "https://youtube.com/watch?v=gmbW_lXXIkc"
+  },
+  {
+    "video_id": "OFyECKgWXo8",
+    "title": "10 Claude Code Plugins to 10X Your Projects",
+    "channel": "Chase AI",
+    "published_at": "2026-03-16T19:32:12Z",
+    "url": "https://youtube.com/watch?v=OFyECKgWXo8"
   }
 ]
