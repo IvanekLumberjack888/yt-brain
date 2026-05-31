@@ -15,26 +15,23 @@ import re
 import glob
 import subprocess
 import tempfile
-import asyncio
 import sys
 from datetime import date
 from pathlib import Path
 
 import google.generativeai as genai
-import edge_tts
 
 # ─── CESTY ───────────────────────────────────────────────────────────────────
-ROOT = Path(__file__).parent.parent
-DATA_DIR        = ROOT / "data"
-QUEUE_FILE      = DATA_DIR / "queue.json"
-PROCESSED_FILE  = DATA_DIR / "processed_videos.json"
-SUMMARIES_DIR   = ROOT / "summaries"
-BRIEFS_DIR      = ROOT / "briefs"
+ROOT           = Path(__file__).parent.parent
+DATA_DIR       = ROOT / "data"
+QUEUE_FILE     = DATA_DIR / "queue.json"
+PROCESSED_FILE = DATA_DIR / "processed_videos.json"
+SUMMARIES_DIR  = ROOT / "summaries"
+BRIEFS_DIR     = ROOT / "public" / "briefs"   # Next.js static serving
 # ─────────────────────────────────────────────────────────────────────────────
 
-GEMINI_MODEL    = "gemini-2.0-flash"
-TTS_VOICE       = "cs-CZ-AntoninNeural"
-MAX_TRANSCRIPT  = 8000
+GEMINI_MODEL   = "gemini-2.0-flash"
+MAX_TRANSCRIPT = 8000
 
 TRIAGE_PROMPT = """Jsi knowledge triage systém pro Junior Data Engineera učícího se:
 Azure (ADF, Databricks, Event Hub, Service Bus), Python, SQL, data engineering,
@@ -63,8 +60,6 @@ ACTION: jedna konkrétní věc k vyzkoušení (nebo N/A)
 TAGS: #tag1 #tag2 #tag3"""
 
 
-# ─── HELPERS ─────────────────────────────────────────────────────────────────
-
 def load_json(path: Path, default):
     if path.exists():
         return json.loads(path.read_text(encoding="utf-8"))
@@ -80,7 +75,6 @@ def slugify(text: str) -> str:
     return text[:60].strip("-")
 
 def fetch_transcript(video_id: str, tmp_dir: str) -> str:
-    """Stáhne titulky přes yt-dlp. Vrátí čistý text nebo ''."""
     url = f"https://www.youtube.com/watch?v={video_id}"
     cmd = [
         "yt-dlp", "--skip-download",
@@ -113,7 +107,6 @@ def _parse_vtt(path: str) -> str:
         line = re.sub(r"<[^>]+>", "", line)
         if line:
             lines.append(line)
-    # Deduplikuj sousední stejné řádky
     deduped, prev = [], None
     for l in lines:
         if l != prev:
@@ -125,7 +118,7 @@ def triage(video: dict, transcript: str, model) -> dict:
     prompt = TRIAGE_PROMPT.format(
         title=video["title"],
         channel=video["channel"],
-        transcript=transcript or "(titulky nedostupné – hodnoť jen z názvu a kanálu)"
+        transcript=transcript or "(titulky nedostupné)"
     )
     try:
         text = model.generate_content(prompt).text.strip()
@@ -135,7 +128,7 @@ def triage(video: dict, transcript: str, model) -> dict:
     return _parse_response(text)
 
 def _parse_response(text: str) -> dict:
-    r = {"triage": "🔴 LOW", "summary": "", "key_points": [], "action": "N/A", "tags": "", "raw": text}
+    r = {"triage": "🔴 LOW", "summary": "", "key_points": [], "action": "N/A", "tags": ""}
     for line in text.splitlines():
         if line.startswith("TRIAGE:"):
             v = line.replace("TRIAGE:", "").strip()
@@ -181,28 +174,61 @@ type: youtube-summary
     filepath.write_text(content, encoding="utf-8")
     return str(filepath)
 
-def build_brief(processed: list, today: str) -> str:
-    high   = [v for v in processed if "🟢" in v["triage"]]
-    medium = [v for v in processed if "🟡" in v["triage"]]
-    low_n  = sum(1 for v in processed if "🔴" in v["triage"])
-    lines  = [
-        f"Dobré ráno. AIVOS Brain Brief, {today}.",
-        f"Dnes {len(processed)} nových videí. Vysoko relevantních: {len(high)}. "
-        f"Středně relevantních: {len(medium)}. Přeskočených: {low_n}.",
+def build_brief_text(results: list, today: str) -> str:
+    high   = [v for v in results if "🟢" in v["triage"]]
+    medium = [v for v in results if "🟡" in v["triage"]]
+    low_n  = sum(1 for v in results if "🔴" in v["triage"])
+
+    lines = [
+        f"Dobré ráno. AIVOS Brain Brief pro {today}.",
+        f"Dnes {len(results)} nových videí. Vysoko relevantních: {len(high)}. Středně: {len(medium)}. Přeskočených: {low_n}.",
         ""
     ]
     for v in (high + medium)[:6]:
-        lines += [f"Video: {v['title']} od {v['channel']}.", v['summary'], ""]
+        lines += [f"Video: {v['title']} od {v['channel']}.", v["summary"], ""]
+
     if not high and not medium:
         lines.append("Dnes žádná relevantní videa. Hodný den na práci.")
-    lines.append("To je vše. Hodně štěstí.")
+    lines.append("To je vše pro dnešní ráno. Hodně štěstí.")
     return "\n".join(lines)
 
-async def make_audio(text: str, path: str):
-    await edge_tts.Communicate(text, TTS_VOICE).save(path)
+def save_brief(results: list, today: str):
+    """Uloží dated brief + latest brief + aktualizuje index.json."""
+    BRIEFS_DIR.mkdir(parents=True, exist_ok=True)
 
+    brief_text = build_brief_text(results, today)
 
-# ─── MAIN ────────────────────────────────────────────────────────────────────
+    high   = [{"title": v["title"], "channel": v["channel"], "url": v["url"], "summary": v["summary"], "action": v["action"], "tags": v["tags"]} for v in results if "🟢" in v["triage"]]
+    medium = [{"title": v["title"], "channel": v["channel"], "url": v["url"], "summary": v["summary"], "action": v["action"], "tags": v["tags"]} for v in results if "🟡" in v["triage"]]
+    low_n  = sum(1 for v in results if "🔴" in v["triage"])
+
+    brief_data = {
+        "date": today,
+        "text": brief_text,
+        "stats": {"high": len(high), "medium": len(medium), "low": low_n, "total": len(results)},
+        "high": high,
+        "medium": medium
+    }
+
+    # Dated soubor (nikdy se nepřepíše)
+    (BRIEFS_DIR / f"{today}.json").write_text(
+        json.dumps(brief_data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    # Latest (přepíše se každý den – pro rychlý přístup)
+    (BRIEFS_DIR / "latest.json").write_text(
+        json.dumps(brief_data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    # Index – seznam všech dostupných dat
+    index_path = BRIEFS_DIR / "index.json"
+    index = load_json(index_path, [])
+    if today not in index:
+        index.insert(0, today)  # nejnovější první
+    save_json(index_path, index)
+
+    print(f"📄 Brief uložen: {today}.json + latest.json + index.json aktualizován.")
+
 
 def main():
     today = date.today().isoformat()
@@ -223,9 +249,8 @@ def main():
     print(f"📥 Queue: {len(queue)} celkem | {len(new_videos)} nových\n")
 
     if not new_videos:
-        print("✅ Nic nového. Generuji prázdný brief.")
-        brief = f"Dobré ráno. AIVOS Brain Brief, {today}. Dnes žádná nová videa. Hodný den."
-        _write_brief(brief, today)
+        print("✅ Nic nového.")
+        save_brief([], today)
         return
 
     results = []
@@ -242,26 +267,16 @@ def main():
         processed.add(video["video_id"])
         results.append({**video, **analysis})
 
-    # Ulož processed, vyprázdni queue
     save_json(PROCESSED_FILE, list(processed))
     save_json(QUEUE_FILE, [])
+    save_brief(results, today)
 
-    # Brief
-    brief_text = build_brief(results, today)
-    _write_brief(brief_text, today)
-
-    # Statistika
     h = sum(1 for r in results if "🟢" in r["triage"])
     m = sum(1 for r in results if "🟡" in r["triage"])
     l = sum(1 for r in results if "🔴" in r["triage"])
     print(f"\n📊 🟢 {h} | 🟡 {m} | 🔴 {l}")
     print("🏁 Hotovo.\n")
 
-def _write_brief(text: str, today: str):
-    BRIEFS_DIR.mkdir(parents=True, exist_ok=True)
-    (BRIEFS_DIR / "latest_brief.md").write_text(f"# Brief {today}\n\n{text}", encoding="utf-8")
-    asyncio.run(make_audio(text, str(BRIEFS_DIR / "latest_brief.mp3")))
-    print("🎙️  Brief vygenerován.")
 
 if __name__ == "__main__":
     main()
