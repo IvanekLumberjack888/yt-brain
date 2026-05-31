@@ -1,201 +1,267 @@
-"""Stage 2: Run locally on Windows (manually or Task Scheduler).
-Fetches transcripts for queued videos and saves as Markdown files.
 """
+brain/process_queue.py – AIVOS Brain Feed (Stage 2)
+====================================================
+Čte data/queue.json (naplněný check_playlist.py),
+zpracuje každé video přes yt-dlp + Gemini Flash,
+uloží sumarizace do summaries/ a vygeneruje ranní brief.
+
+GitHub Secrets potřebné:
+  GEMINI_API_KEY  – z https://aistudio.google.com/app/apikey (zdarma)
+"""
+
+import os
 import json
 import re
+import glob
+import subprocess
+import tempfile
+import asyncio
+import sys
 from datetime import date
 from pathlib import Path
 
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api.proxies import GenericProxyConfig
+import google.generativeai as genai
+import edge_tts
 
-DATA_DIR = Path(__file__).parent.parent / "data"
-TRANSCRIPTS_DIR = Path(__file__).parent.parent / "transcripts"
-QUEUE_FILE = DATA_DIR / "queue.json"
-PROCESSED_FILE = DATA_DIR / "processed_videos.json"
+# ─── CESTY ───────────────────────────────────────────────────────────────────
+ROOT = Path(__file__).parent.parent
+DATA_DIR        = ROOT / "data"
+QUEUE_FILE      = DATA_DIR / "queue.json"
+PROCESSED_FILE  = DATA_DIR / "processed_videos.json"
+SUMMARIES_DIR   = ROOT / "summaries"
+BRIEFS_DIR      = ROOT / "briefs"
+# ─────────────────────────────────────────────────────────────────────────────
 
-# Languages to try in order of preference
-LANG_PRIORITY = ["en", "cs", "sk"]
+GEMINI_MODEL    = "gemini-2.0-flash"
+TTS_VOICE       = "cs-CZ-AntoninNeural"
+MAX_TRANSCRIPT  = 8000
 
+TRIAGE_PROMPT = """Jsi knowledge triage systém pro Junior Data Engineera učícího se:
+Azure (ADF, Databricks, Event Hub, Service Bus), Python, SQL, data engineering,
+ETL/ELT pipeline, AI/LLM, RAG, MCP, Claude, automatizace, produktivita pro tech.
+
+Video: {title}
+Kanál: {channel}
+Transkript: {transcript}
+
+Ohodnoť jednou ze tří kategorií:
+🟢 HIGH – přímo do roadmapy: Azure stack, Python, SQL, data engineering,
+           AI/LLM/RAG/embeddings, MCP, Claude/Gemini, automatizace workflow,
+           second brain pro tech, career growth v IT
+🟡 MEDIUM – obecně užitečný tech/learning/soft-skills obsah
+🔴 LOW – zábava, business/marketing bez tech obsahu, nesouvisí s učením
+
+Pro 🟢 a 🟡 vyplň sekce níže. Pro 🔴 POUZE první řádek.
+
+Odpovídej česky, technické pojmy anglicky. Max 5 bullet points.
+
+TRIAGE: [🟢 HIGH / 🟡 MEDIUM / 🔴 LOW]
+SUMMARY: 2-3 věty co video obsahuje.
+KEY_POINTS:
+- bod
+ACTION: jedna konkrétní věc k vyzkoušení (nebo N/A)
+TAGS: #tag1 #tag2 #tag3"""
+
+
+# ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 def load_json(path: Path, default):
     if path.exists():
         return json.loads(path.read_text(encoding="utf-8"))
     return default
 
-
 def save_json(path: Path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
-
 def slugify(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r"[^\w\s-]", "", text)
-    text = re.sub(r"[\s_]+", "-", text)
+    text = re.sub(r"[^\w\s-]", "", text.lower())
+    text = re.sub(r"[\s_-]+", "-", text)
     return text[:60].strip("-")
 
+def fetch_transcript(video_id: str, tmp_dir: str) -> str:
+    """Stáhne titulky přes yt-dlp. Vrátí čistý text nebo ''."""
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    cmd = [
+        "yt-dlp", "--skip-download",
+        "--write-auto-subs",
+        "--sub-langs", "cs,sk,en",
+        "--sub-format", "vtt",
+        "--output", os.path.join(tmp_dir, "%(id)s.%(ext)s"),
+        "--no-warnings", "--quiet",
+        url
+    ]
+    subprocess.run(cmd, capture_output=True, timeout=60)
 
-def _make_ytt():
-    """Create YouTubeTranscriptApi instance, optionally with Chrome cookies."""
-    try:
-        import browser_cookie3
-        cookies = browser_cookie3.chrome(domain_name=".youtube.com")
-        ytt = YouTubeTranscriptApi(cookie_path=None, http_client=None)
-        # Use requests session with cookies
-        import requests
-        session = requests.Session()
-        session.cookies = cookies
-        ytt = YouTubeTranscriptApi()
-        ytt._http_client._session = session
-        print("  [using Chrome cookies]")
-        return ytt
-    except Exception:
-        return YouTubeTranscriptApi()
+    for lang in ["cs", "sk", "en"]:
+        files = glob.glob(os.path.join(tmp_dir, f"*.{lang}*.vtt"))
+        if files:
+            return _parse_vtt(files[0])
+    files = glob.glob(os.path.join(tmp_dir, "*.vtt"))
+    return _parse_vtt(files[0]) if files else ""
 
-
-def fetch_transcript(video_id: str) -> tuple[str, str] | tuple[None, None]:
-    """Returns (transcript_text, lang) or (None, None).
-    Uses list() to find available languages, then fetches the best one.
-    """
-    # Try with cookies first, then without
-    for use_cookies in [True, False]:
-        ytt = _try_build_ytt(use_cookies)
-        result = _fetch_with_ytt(ytt, video_id, use_cookies)
-        if result[0] is not None:
-            return result
-
-    print("  ! All transcript fetches failed")
-    return None, None
-
-
-def _try_build_ytt(use_cookies: bool):
-    if not use_cookies:
-        return YouTubeTranscriptApi()
-    try:
-        import browser_cookie3
-        import requests
-        cookies = browser_cookie3.chrome(domain_name=".youtube.com")
-        cookie_dict = {c.name: c.value for c in cookies}
-        # Write temp netscape cookies file
-        tmp = Path("data/_cookies.txt")
-        tmp.parent.mkdir(exist_ok=True)
-        lines = ["# Netscape HTTP Cookie File\n"]
-        for c in cookies:
-            lines.append(
-                f".youtube.com\tTRUE\t/\t"
-                f"{'TRUE' if c.secure else 'FALSE'}\t"
-                f"{int(c.expires) if c.expires else 0}\t"
-                f"{c.name}\t{c.value}\n"
-            )
-        tmp.write_text("".join(lines), encoding="utf-8")
-        print("  [using Chrome cookies]")
-        return YouTubeTranscriptApi(cookie_path=str(tmp))
-    except Exception as e:
-        print(f"  [cookies unavailable: {e}]")
-        return YouTubeTranscriptApi()
-
-
-def _fetch_with_ytt(ytt, video_id: str, label: bool) -> tuple:
-    try:
-        transcript_list = ytt.list(video_id)
-    except Exception as exc:
-        print(f"  ! Could not list transcripts: {exc}")
-        return None, None
-
-    available = {t.language_code: t for t in transcript_list}
-    print(f"  Available languages: {list(available.keys())}")
-
-    for lang in LANG_PRIORITY:
-        if lang in available:
-            try:
-                entries = available[lang].fetch()
-                text = _merge_entries(entries)
-                if text:
-                    return text, lang
-            except Exception as exc:
-                print(f"  ! Fetch failed for {lang}: {exc}")
-                continue
-
-    for lang_code, t in available.items():
-        try:
-            entries = t.fetch()
-            text = _merge_entries(entries)
-            if text:
-                return text, lang_code
-        except Exception:
+def _parse_vtt(path: str) -> str:
+    with open(path, encoding="utf-8") as f:
+        content = f.read()
+    lines = []
+    for line in content.splitlines():
+        line = line.strip()
+        if not line or line.startswith("WEBVTT") or line.startswith("NOTE"):
             continue
+        if re.match(r"^\d{2}:\d{2}.*-->", line) or re.match(r"^\d+$", line):
+            continue
+        line = re.sub(r"<[^>]+>", "", line)
+        if line:
+            lines.append(line)
+    # Deduplikuj sousední stejné řádky
+    deduped, prev = [], None
+    for l in lines:
+        if l != prev:
+            deduped.append(l)
+            prev = l
+    return " ".join(deduped)[:MAX_TRANSCRIPT]
 
-    return None, None
+def triage(video: dict, transcript: str, model) -> dict:
+    prompt = TRIAGE_PROMPT.format(
+        title=video["title"],
+        channel=video["channel"],
+        transcript=transcript or "(titulky nedostupné – hodnoť jen z názvu a kanálu)"
+    )
+    try:
+        text = model.generate_content(prompt).text.strip()
+    except Exception as e:
+        print(f"  ⚠️  Gemini error: {e}")
+        return {"triage": "🔴 LOW", "summary": "", "key_points": [], "action": "N/A", "tags": ""}
+    return _parse_response(text)
 
+def _parse_response(text: str) -> dict:
+    r = {"triage": "🔴 LOW", "summary": "", "key_points": [], "action": "N/A", "tags": "", "raw": text}
+    for line in text.splitlines():
+        if line.startswith("TRIAGE:"):
+            v = line.replace("TRIAGE:", "").strip()
+            r["triage"] = "🟢 HIGH" if "🟢" in v else ("🟡 MEDIUM" if "🟡" in v else "🔴 LOW")
+        elif line.startswith("SUMMARY:"):
+            r["summary"] = line.replace("SUMMARY:", "").strip()
+        elif line.startswith("ACTION:"):
+            r["action"] = line.replace("ACTION:", "").strip()
+        elif line.startswith("TAGS:"):
+            r["tags"] = line.replace("TAGS:", "").strip()
+        elif line.startswith("- ") and r["summary"]:
+            r["key_points"].append(line[2:].strip())
+    return r
 
-def _merge_entries(entries) -> str:
-    paragraphs, chunk, chunk_start = [], [], 0.0
-    for e in entries:
-        if e.start - chunk_start > 30 and chunk:
-            paragraphs.append(" ".join(chunk))
-            chunk, chunk_start = [], e.start
-        chunk.append(e.text.replace("\n", " ").strip())
-    if chunk:
-        paragraphs.append(" ".join(chunk))
-    return "\n\n".join(paragraphs)
-
-
-def save_markdown(video: dict, transcript: str | None, lang: str | None) -> Path:
-    year = date.today().strftime("%Y")
-    out_dir = TRANSCRIPTS_DIR / year
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    slug = slugify(video.get("title", video["video_id"]))
-    filepath = out_dir / f"{slug}--{video['video_id']}.md"
-
-    body = transcript or "_Transcript not available (captions disabled)._"
+def save_summary(video: dict, analysis: dict, today: str) -> str:
+    SUMMARIES_DIR.mkdir(parents=True, exist_ok=True)
+    slug = slugify(video["title"])
+    filepath = SUMMARIES_DIR / f"{today}-{slug}.md"
+    kp = "\n".join(f"- {p}" for p in analysis["key_points"]) or "- (viz video)"
     content = f"""---
-title: "{video.get('title', '')}"
-channel: "{video.get('channel', '')}"
-video_url: "{video.get('url', '')}"
-video_id: "{video['video_id']}"
-date_added: "{video.get('published_at', '')[:10]}"
-date_processed: "{date.today().isoformat()}"
-lang: "{lang or 'none'}"
-has_transcript: {str(transcript is not None).lower()}
+title: "{video['title']}"
+channel: "{video['channel']}"
+source: "{video['url']}"
+date: {today}
+triage: "{analysis['triage']}"
+tags: {analysis['tags']}
+type: youtube-summary
 ---
 
-# {video.get('title', video['video_id'])}
+# {video['title']}
 
-**Channel:** {video.get('channel', 'N/A')}
-**URL:** {video.get('url', '')}
+> {analysis['triage']} | [{video['channel']}]({video['url']}) | {today}
 
-## Transcript
+## Shrnutí
+{analysis['summary']}
 
-{body}
+## Klíčové body
+{kp}
+
+## Akční krok
+{analysis['action']}
 """
     filepath.write_text(content, encoding="utf-8")
-    return filepath
+    return str(filepath)
 
+def build_brief(processed: list, today: str) -> str:
+    high   = [v for v in processed if "🟢" in v["triage"]]
+    medium = [v for v in processed if "🟡" in v["triage"]]
+    low_n  = sum(1 for v in processed if "🔴" in v["triage"])
+    lines  = [
+        f"Dobré ráno. AIVOS Brain Brief, {today}.",
+        f"Dnes {len(processed)} nových videí. Vysoko relevantních: {len(high)}. "
+        f"Středně relevantních: {len(medium)}. Přeskočených: {low_n}.",
+        ""
+    ]
+    for v in (high + medium)[:6]:
+        lines += [f"Video: {v['title']} od {v['channel']}.", v['summary'], ""]
+    if not high and not medium:
+        lines.append("Dnes žádná relevantní videa. Hodný den na práci.")
+    lines.append("To je vše. Hodně štěstí.")
+    return "\n".join(lines)
+
+async def make_audio(text: str, path: str):
+    await edge_tts.Communicate(text, TTS_VOICE).save(path)
+
+
+# ─── MAIN ────────────────────────────────────────────────────────────────────
 
 def main():
-    queue = load_json(QUEUE_FILE, [])
-    if not queue:
-        print("Queue is empty. Nothing to process.")
-        return
+    today = date.today().isoformat()
+    print(f"\n🧠 AIVOS process_queue | {today}\n")
 
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("❌ GEMINI_API_KEY není nastaven.")
+        sys.exit(1)
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(GEMINI_MODEL)
+
+    queue     = load_json(QUEUE_FILE, [])
     processed = set(load_json(PROCESSED_FILE, []))
 
-    for video in queue:
-        vid_id = video["video_id"]
-        print(f"Processing: {video.get('title', vid_id)}")
-        transcript, lang = fetch_transcript(vid_id)
-        filepath = save_markdown(video, transcript, lang)
-        status = f"✓ transcript [{lang}]" if transcript else "✗ no transcript"
-        print(f"  {status} → {filepath.name}")
-        processed.add(vid_id)
+    new_videos = [v for v in queue if v["video_id"] not in processed]
+    print(f"📥 Queue: {len(queue)} celkem | {len(new_videos)} nových\n")
 
+    if not new_videos:
+        print("✅ Nic nového. Generuji prázdný brief.")
+        brief = f"Dobré ráno. AIVOS Brain Brief, {today}. Dnes žádná nová videa. Hodný den."
+        _write_brief(brief, today)
+        return
+
+    results = []
+    for i, video in enumerate(new_videos, 1):
+        print(f"[{i}/{len(new_videos)}] {video['title'][:65]}")
+        with tempfile.TemporaryDirectory() as tmp:
+            transcript = fetch_transcript(video["video_id"], tmp)
+        analysis = triage(video, transcript, model)
+        print(f"  {analysis['triage']}")
+
+        if "🔴" not in analysis["triage"]:
+            save_summary(video, analysis, today)
+
+        processed.add(video["video_id"])
+        results.append({**video, **analysis})
+
+    # Ulož processed, vyprázdni queue
     save_json(PROCESSED_FILE, list(processed))
     save_json(QUEUE_FILE, [])
-    print(f"\nDone. {len(queue)} videos processed.")
-    print("Now run: git add . && git commit -m 'transcripts' && git push")
 
+    # Brief
+    brief_text = build_brief(results, today)
+    _write_brief(brief_text, today)
+
+    # Statistika
+    h = sum(1 for r in results if "🟢" in r["triage"])
+    m = sum(1 for r in results if "🟡" in r["triage"])
+    l = sum(1 for r in results if "🔴" in r["triage"])
+    print(f"\n📊 🟢 {h} | 🟡 {m} | 🔴 {l}")
+    print("🏁 Hotovo.\n")
+
+def _write_brief(text: str, today: str):
+    BRIEFS_DIR.mkdir(parents=True, exist_ok=True)
+    (BRIEFS_DIR / "latest_brief.md").write_text(f"# Brief {today}\n\n{text}", encoding="utf-8")
+    asyncio.run(make_audio(text, str(BRIEFS_DIR / "latest_brief.mp3")))
+    print("🎙️  Brief vygenerován.")
 
 if __name__ == "__main__":
     main()
