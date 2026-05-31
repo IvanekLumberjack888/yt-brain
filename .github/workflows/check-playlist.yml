@@ -48,3 +48,17 @@ jobs:
           git add -A
           git diff --staged --quiet || git commit -m "🧠 Brain Feed $(date +%Y-%m-%d) [skip ci]"
           git push
+
+      - name: 📤 Push briefs do AIVOS
+        env:
+          AIVOS_TOKEN: ${{ secrets.AIVOS_GITHUB_TOKEN }}
+        run: |
+          git clone https://x-access-token:$AIVOS_TOKEN@github.com/IvanekLumberjack888/AIVOS.git /tmp/aivos
+          mkdir -p /tmp/aivos/public/briefs
+          cp -r public/briefs/. /tmp/aivos/public/briefs/
+          cd /tmp/aivos
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add public/briefs/
+          git diff --staged --quiet || git commit -m "🧠 Brief $(date +%Y-%m-%d)"
+          git push
