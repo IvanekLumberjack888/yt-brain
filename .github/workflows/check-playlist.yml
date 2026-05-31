@@ -2,7 +2,7 @@ name: 🧠 AIVOS Brain Feed
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # 08:00 CZ letní čas (CEST)
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: 📦 Závislosti (check_playlist)
+      - name: 📦 Závislosti check_playlist
         run: pip install google-api-python-client==2.115.0
 
       - name: 📡 Stage 1 – detekce nových videí
@@ -33,15 +33,15 @@ jobs:
           YT_PLAYLIST_ID: ${{ secrets.YT_PLAYLIST_ID }}
         run: python brain/check_playlist.py
 
-      - name: 📦 Závislosti (process_queue)
-        run: pip install yt-dlp google-generativeai edge-tts
+      - name: 📦 Závislosti process_queue
+        run: pip install yt-dlp google-generativeai
 
       - name: 🧠 Stage 2 – triage + sumarizace + brief
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python brain/process_queue.py
 
-      - name: 💾 Commit výsledků
+      - name: 💾 Commit do yt-brain
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
@@ -60,5 +60,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add public/briefs/
-          git diff --staged --quiet || git commit -m "🧠 Brief $(date +%Y-%m-%d)"
+          git diff --staged --quiet || git commit -m "🧠 Brief $(date +%Y-%m-%d) [skip ci]"
           git push
