@@ -3,15 +3,16 @@ title: "Prompt Engineering Techniques Explained | Chain of Thought, Role Prompti
 channel: "AI Hints"
 source: "https://youtube.com/watch?v=josO3tVSMUk"
 date: 2026-06-01
-score: 5
-triage: "🟡 MEDIUM"
+score: 9
+triage: "🟢 HIGH"
 tags: 
+transcript_source: "none"
 type: youtube-summary
 ---
 
 # Prompt Engineering Techniques Explained | Chain of Thought, Role Prompting, Tree of Thoughts
 
-> 🟡 MEDIUM | Score: 5/10 | [AI Hints](https://youtube.com/watch?v=josO3tVSMUk) | 2026-06-01
+> 🟢 HIGH | Score: 9/10 | [AI Hints](https://youtube.com/watch?v=josO3tVSMUk) | 2026-06-01
 
 ## Shrnutí
 

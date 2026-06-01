@@ -3,15 +3,16 @@ title: "Creator of C# and TypeScript: "AI will NEVER Replace Coders, Here's Why"
 channel: "Sajjaad Khader"
 source: "https://youtube.com/watch?v=CPrePbvbbic"
 date: 2026-06-01
-score: 5
-triage: "🟡 MEDIUM"
+score: 9
+triage: "🟢 HIGH"
 tags: 
+transcript_source: "none"
 type: youtube-summary
 ---
 
 # Creator of C# and TypeScript: "AI will NEVER Replace Coders, Here's Why" | Anders Hejlsberg
 
-> 🟡 MEDIUM | Score: 5/10 | [Sajjaad Khader](https://youtube.com/watch?v=CPrePbvbbic) | 2026-06-01
+> 🟢 HIGH | Score: 9/10 | [Sajjaad Khader](https://youtube.com/watch?v=CPrePbvbbic) | 2026-06-01
 
 ## Shrnutí
 

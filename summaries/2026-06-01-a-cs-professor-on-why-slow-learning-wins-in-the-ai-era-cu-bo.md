@@ -3,15 +3,16 @@ title: "A CS Professor on Why Slow Learning Wins in the AI Era | CU Boulder, Tom
 channel: "EO"
 source: "https://youtube.com/watch?v=BAgxGp2WEu4"
 date: 2026-06-01
-score: 5
-triage: "🟡 MEDIUM"
+score: 9
+triage: "🟢 HIGH"
 tags: 
+transcript_source: "none"
 type: youtube-summary
 ---
 
 # A CS Professor on Why Slow Learning Wins in the AI Era | CU Boulder, Tom Yeh
 
-> 🟡 MEDIUM | Score: 5/10 | [EO](https://youtube.com/watch?v=BAgxGp2WEu4) | 2026-06-01
+> 🟢 HIGH | Score: 9/10 | [EO](https://youtube.com/watch?v=BAgxGp2WEu4) | 2026-06-01
 
 ## Shrnutí
 

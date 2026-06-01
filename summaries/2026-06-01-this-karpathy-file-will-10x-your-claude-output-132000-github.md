@@ -6,6 +6,7 @@ date: 2026-06-01
 score: 5
 triage: "🟡 MEDIUM"
 tags: 
+transcript_source: "none"
 type: youtube-summary
 ---
 
