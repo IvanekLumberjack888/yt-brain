@@ -1,46 +1,37 @@
 name: 🧠 AIVOS Brain Feed
-
 on:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
-
 jobs:
   brain-feed:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: write
-
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: 🐍 Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
-
       - name: 📦 Závislosti check_playlist
         run: pip install google-api-python-client==2.115.0
-
       - name: 📡 Stage 1 – detekce nových videí
         env:
           YT_API_KEY: ${{ secrets.YT_API_KEY }}
           YT_PLAYLIST_ID: ${{ secrets.YT_PLAYLIST_ID }}
         run: python brain/check_playlist.py
-
       - name: 📦 Závislosti process_queue
-        run: pip install yt-dlp google-generativeai
-
+        run: pip install --no-cache-dir yt-dlp google-generativeai edge-tts
       - name: 🧠 Stage 2 – triage + sumarizace + brief
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python brain/process_queue.py
-
       - name: 💾 Commit do yt-brain
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -48,7 +39,6 @@ jobs:
           git add -A
           git diff --staged --quiet || git commit -m "🧠 Brain Feed $(date +%Y-%m-%d) [skip ci]"
           git push
-
       - name: 📤 Push briefs do AIVOS
         env:
           AIVOS_TOKEN: ${{ secrets.AIVOS_GITHUB_TOKEN }}
