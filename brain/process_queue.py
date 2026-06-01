@@ -1,12 +1,5 @@
 """
 brain/process_queue.py – AIVOS Brain Feed (Stage 2)
-====================================================
-Čte data/queue.json (naplněný check_playlist.py),
-zpracuje každé video přes yt-dlp + Gemini Flash,
-uloží sumarizace do summaries/ a vygeneruje ranní brief.
-
-GitHub Secrets potřebné:
-  GEMINI_API_KEY  – z https://aistudio.google.com/app/apikey (zdarma)
 """
 
 import os
@@ -21,43 +14,73 @@ from pathlib import Path
 
 import google.generativeai as genai
 
-# ─── CESTY ───────────────────────────────────────────────────────────────────
 ROOT           = Path(__file__).parent.parent
 DATA_DIR       = ROOT / "data"
 QUEUE_FILE     = DATA_DIR / "queue.json"
 PROCESSED_FILE = DATA_DIR / "processed_videos.json"
 SUMMARIES_DIR  = ROOT / "summaries"
-BRIEFS_DIR     = ROOT / "public" / "briefs"   # Next.js static serving
-# ─────────────────────────────────────────────────────────────────────────────
+BRIEFS_DIR     = ROOT / "public" / "briefs"
 
 GEMINI_MODEL   = "gemini-2.0-flash"
 MAX_TRANSCRIPT = 8000
 
-TRIAGE_PROMPT = """Jsi knowledge triage systém pro Junior Data Engineera učícího se:
-Azure (ADF, Databricks, Event Hub, Service Bus), Python, SQL, data engineering,
-ETL/ELT pipeline, AI/LLM, RAG, MCP, Claude, automatizace, produktivita pro tech.
+TRIAGE_PROMPT = """Jsi osobní knowledge kurátor pro Iva – Junior Data Engineera (Konica Minolta, od dubna 2026, Azure stack).
+Ivo má neurodivergentní profil (ADHD-PI, INTJ). Chce growth v IT + AI, ne marketing obsah.
 
-Video: {title}
+Ivo aktivně sleduje a studuje tato témata (z jeho Notion roadmap + YouTube playlistů):
+
+TIER 1 – Nejvyšší priorita (skóre 9-10):
+- Azure: Data Factory, Databricks, Event Hub, Service Bus, Synapse, Fabric, DP-700
+- Data Engineering: Python, PySpark, SQL, ETL/ELT pipelines, dbt, Medallion architektura
+- AI/LLM systémy: RAG, embeddings, vector DB, LangChain, AI agents, LLMOps
+- Claude ekosystém: Claude Code, MCP (Model Context Protocol), Claude skills/plugins
+- Second Brain / PKM: Notion systémy, Obsidian, PARA metoda, knowledge management pro tech
+
+TIER 2 – Vysoká priorita (skóre 7-8):
+- AI nástroje obecně: Cursor, Copilot, Gemini, n8n workflow automation, Make/Zapier
+- Python pro data/AI: pandas, numpy, FastAPI, async, OOP patterns
+- Career v IT: junior → senior growth, soft skills pro engineery, job market v AI
+- Produktivita pro ADHD/neurodivergentní tech lidi: focus systémy, energy management
+- Git, GitHub Actions, CI/CD, Docker základy
+
+TIER 3 – Zajímavé (skóre 5-6):
+- Obecný AI obsah: tech news, AI launches, industry trendy
+- Cloud obecně: AWS, GCP
+- Programování: JS/TS, Next.js, React
+- Osobní rozvoj pro tech lidi: komunikace, leadership, mindset
+- Bullet journal, analogové systémy produktivity
+
+TIER 4 – Nerelevantní (skóre 1-4):
+- Čistý business/marketing/sales bez tech obsahu
+- Fitness, jóga, meditace, zdravá strava
+- Zábava, filmy, hudba, lifestyle
+- Finance/investice bez tech kontextu
+- Geopolitika, zprávy, politika
+
+PRAVIDLA (vždy platí):
+- "Claude Code" v názvu = VŽDY score 9+
+- "n8n" nebo "automation workflow" = VŽDY score 7+
+- "second brain" nebo "Notion system" = VŽDY score 7+
+- "Data with Baraa", "NetworkChuck", "Fireship", "Andrej Karpathy" = VŽDY score 7+
+- "career switch IT", "junior developer", "new job tech" = score 7+
+- Pokud název/kanál jasně napovídá – dej benefit of the doubt, nebuď přísný
+
+Video název: {title}
 Kanál: {channel}
 Transkript: {transcript}
 
-Ohodnoť jednou ze tří kategorií:
-🟢 HIGH – přímo do roadmapy: Azure stack, Python, SQL, data engineering,
-           AI/LLM/RAG/embeddings, MCP, Claude/Gemini, automatizace workflow,
-           second brain pro tech, career growth v IT
-🟡 MEDIUM – obecně užitečný tech/learning/soft-skills obsah
-🔴 LOW – zábava, business/marketing bez tech obsahu, nesouvisí s učením
-
-Pro 🟢 a 🟡 vyplň sekce níže. Pro 🔴 POUZE první řádek.
-
-Odpovídej česky, technické pojmy anglicky. Max 5 bullet points.
-
-TRIAGE: [🟢 HIGH / 🟡 MEDIUM / 🔴 LOW]
-SUMMARY: 2-3 věty co video obsahuje.
+Odpovídej PŘESNĚ v tomto formátu:
+SCORE: [číslo 1-10]
+TRIAGE: [🟢 HIGH pokud score 7+, 🟡 MEDIUM pokud 5-6, 🔴 LOW pokud 1-4]
+SUMMARY: [2-3 věty česky]
 KEY_POINTS:
-- bod
-ACTION: jedna konkrétní věc k vyzkoušení (nebo N/A)
-TAGS: #tag1 #tag2 #tag3"""
+- [bod 1]
+- [bod 2]
+- [bod 3]
+ACTION: [konkrétní věc k vyzkoušení nebo N/A]
+TAGS: [#tag1 #tag2 #tag3]
+
+Pro SCORE 1-4: pouze SCORE a TRIAGE řádek."""
 
 
 def load_json(path: Path, default):
@@ -86,7 +109,6 @@ def fetch_transcript(video_id: str, tmp_dir: str) -> str:
         url
     ]
     subprocess.run(cmd, capture_output=True, timeout=60)
-
     for lang in ["cs", "sk", "en"]:
         files = glob.glob(os.path.join(tmp_dir, f"*.{lang}*.vtt"))
         if files:
@@ -118,19 +140,24 @@ def triage(video: dict, transcript: str, model) -> dict:
     prompt = TRIAGE_PROMPT.format(
         title=video["title"],
         channel=video["channel"],
-        transcript=transcript or "(titulky nedostupné)"
+        transcript=transcript or "(titulky nedostupné – hodnoť jen z názvu a kanálu)"
     )
     try:
         text = model.generate_content(prompt).text.strip()
     except Exception as e:
         print(f"  ⚠️  Gemini error: {e}")
-        return {"triage": "🔴 LOW", "summary": "", "key_points": [], "action": "N/A", "tags": ""}
+        return {"score": 5, "triage": "🟡 MEDIUM", "summary": "", "key_points": [], "action": "N/A", "tags": ""}
     return _parse_response(text)
 
 def _parse_response(text: str) -> dict:
-    r = {"triage": "🔴 LOW", "summary": "", "key_points": [], "action": "N/A", "tags": ""}
+    r = {"score": 1, "triage": "🔴 LOW", "summary": "", "key_points": [], "action": "N/A", "tags": ""}
     for line in text.splitlines():
-        if line.startswith("TRIAGE:"):
+        if line.startswith("SCORE:"):
+            try:
+                r["score"] = int(re.search(r'\d+', line).group())
+            except:
+                pass
+        elif line.startswith("TRIAGE:"):
             v = line.replace("TRIAGE:", "").strip()
             r["triage"] = "🟢 HIGH" if "🟢" in v else ("🟡 MEDIUM" if "🟡" in v else "🔴 LOW")
         elif line.startswith("SUMMARY:"):
@@ -153,6 +180,7 @@ title: "{video['title']}"
 channel: "{video['channel']}"
 source: "{video['url']}"
 date: {today}
+score: {analysis['score']}
 triage: "{analysis['triage']}"
 tags: {analysis['tags']}
 type: youtube-summary
@@ -160,7 +188,7 @@ type: youtube-summary
 
 # {video['title']}
 
-> {analysis['triage']} | [{video['channel']}]({video['url']}) | {today}
+> {analysis['triage']} | Score: {analysis['score']}/10 | [{video['channel']}]({video['url']}) | {today}
 
 ## Shrnutí
 {analysis['summary']}
@@ -175,8 +203,8 @@ type: youtube-summary
     return str(filepath)
 
 def build_brief_text(results: list, today: str) -> str:
-    high   = [v for v in results if "🟢" in v["triage"]]
-    medium = [v for v in results if "🟡" in v["triage"]]
+    high   = sorted([v for v in results if "🟢" in v["triage"]], key=lambda x: x.get("score", 0), reverse=True)
+    medium = sorted([v for v in results if "🟡" in v["triage"]], key=lambda x: x.get("score", 0), reverse=True)
     low_n  = sum(1 for v in results if "🔴" in v["triage"])
 
     lines = [
@@ -184,51 +212,46 @@ def build_brief_text(results: list, today: str) -> str:
         f"Dnes {len(results)} nových videí. Vysoko relevantních: {len(high)}. Středně: {len(medium)}. Přeskočených: {low_n}.",
         ""
     ]
-    for v in (high + medium)[:6]:
-        lines += [f"Video: {v['title']} od {v['channel']}.", v["summary"], ""]
-
+    if high:
+        lines.append("Top videa pro tebe dnes:")
+        for v in high[:5]:
+            lines += [f"Skóre {v.get('score','?')} z 10. {v['title']} od {v['channel']}.", v.get("summary",""), ""]
+    if medium and len(high) < 3:
+        lines.append("Zajímavé:")
+        for v in medium[:3]:
+            lines += [f"Skóre {v.get('score','?')}. {v['title']}.", v.get("summary",""), ""]
     if not high and not medium:
-        lines.append("Dnes žádná relevantní videa. Hodný den na práci.")
-    lines.append("To je vše pro dnešní ráno. Hodně štěstí.")
+        lines.append("Dnes žádná relevantní videa.")
+    lines.append("To je vše. Hodně štěstí.")
     return "\n".join(lines)
 
 def save_brief(results: list, today: str):
-    """Uloží dated brief + latest brief + aktualizuje index.json."""
     BRIEFS_DIR.mkdir(parents=True, exist_ok=True)
-
-    brief_text = build_brief_text(results, today)
-
-    high   = [{"title": v["title"], "channel": v["channel"], "url": v["url"], "summary": v["summary"], "action": v["action"], "tags": v["tags"]} for v in results if "🟢" in v["triage"]]
-    medium = [{"title": v["title"], "channel": v["channel"], "url": v["url"], "summary": v["summary"], "action": v["action"], "tags": v["tags"]} for v in results if "🟡" in v["triage"]]
-    low_n  = sum(1 for v in results if "🔴" in v["triage"])
+    high = sorted(
+        [{"title": v["title"], "channel": v["channel"], "url": v["url"],
+          "summary": v["summary"], "action": v["action"], "tags": v["tags"], "score": v.get("score", 0)}
+         for v in results if "🟢" in v["triage"]], key=lambda x: x["score"], reverse=True)
+    medium = sorted(
+        [{"title": v["title"], "channel": v["channel"], "url": v["url"],
+          "summary": v["summary"], "action": v["action"], "tags": v["tags"], "score": v.get("score", 0)}
+         for v in results if "🟡" in v["triage"]], key=lambda x: x["score"], reverse=True)
+    low_n = sum(1 for v in results if "🔴" in v["triage"])
 
     brief_data = {
         "date": today,
-        "text": brief_text,
+        "text": build_brief_text(results, today),
         "stats": {"high": len(high), "medium": len(medium), "low": low_n, "total": len(results)},
         "high": high,
         "medium": medium
     }
-
-    # Dated soubor (nikdy se nepřepíše)
-    (BRIEFS_DIR / f"{today}.json").write_text(
-        json.dumps(brief_data, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-
-    # Latest (přepíše se každý den – pro rychlý přístup)
-    (BRIEFS_DIR / "latest.json").write_text(
-        json.dumps(brief_data, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-
-    # Index – seznam všech dostupných dat
+    (BRIEFS_DIR / f"{today}.json").write_text(json.dumps(brief_data, ensure_ascii=False, indent=2), encoding="utf-8")
+    (BRIEFS_DIR / "latest.json").write_text(json.dumps(brief_data, ensure_ascii=False, indent=2), encoding="utf-8")
     index_path = BRIEFS_DIR / "index.json"
     index = load_json(index_path, [])
     if today not in index:
-        index.insert(0, today)  # nejnovější první
+        index.insert(0, today)
     save_json(index_path, index)
-
-    print(f"📄 Brief uložen: {today}.json + latest.json + index.json aktualizován.")
-
+    print(f"📄 Brief uložen: {today}.json")
 
 def main():
     today = date.today().isoformat()
@@ -244,7 +267,6 @@ def main():
 
     queue     = load_json(QUEUE_FILE, [])
     processed = set(load_json(PROCESSED_FILE, []))
-
     new_videos = [v for v in queue if v["video_id"] not in processed]
     print(f"📥 Queue: {len(queue)} celkem | {len(new_videos)} nových\n")
 
@@ -259,11 +281,9 @@ def main():
         with tempfile.TemporaryDirectory() as tmp:
             transcript = fetch_transcript(video["video_id"], tmp)
         analysis = triage(video, transcript, model)
-        print(f"  {analysis['triage']}")
-
+        print(f"  {analysis['triage']} ({analysis.get('score','?')}/10)")
         if "🔴" not in analysis["triage"]:
             save_summary(video, analysis, today)
-
         processed.add(video["video_id"])
         results.append({**video, **analysis})
 
@@ -276,7 +296,6 @@ def main():
     l = sum(1 for r in results if "🔴" in r["triage"])
     print(f"\n📊 🟢 {h} | 🟡 {m} | 🔴 {l}")
     print("🏁 Hotovo.\n")
-
 
 if __name__ == "__main__":
     main()
