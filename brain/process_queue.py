@@ -14,6 +14,8 @@ import asyncio
 from datetime import date
 from pathlib import Path
 
+import warnings
+warnings.filterwarnings("ignore")
 import google.generativeai as genai
 import edge_tts
 
@@ -293,41 +295,63 @@ type: youtube-summary
     filepath.write_text(content, encoding="utf-8")
     return str(filepath)
 
+def _fmt_action(action: str) -> str:
+    if not action or action.strip() in ("N/A", "n/a", "-", ""):
+        return ""
+    return action.strip()
+
 def generate_podcast_script(results: list, today: str, model) -> str:
-    """Gemini napíše podcast skript moderátor stylem."""
+    """Gemini napise podcast skript moderator stylem."""
     high   = [v for v in results if "🟢" in v["triage"]]
     medium = [v for v in results if "🟡" in v["triage"]]
     low_n  = sum(1 for v in results if "🔴" in v["triage"])
 
-    brief_data = f"Datum: {today}\nCelkem videí: {len(results)}\nHIGH: {len(high)}, MEDIUM: {len(medium)}, PŘESKOČENO: {low_n}\n\n"
+    brief_data = "Datum: {}\nCelkem videi: {}\nHIGH: {}, MEDIUM: {}, PRESKOCENO: {}\n\n".format(
+        today, len(results), len(high), len(medium), low_n)
 
     if high:
         brief_data += "=== HIGH RELEVANCE VIDEA ===\n"
         for v in high:
-            brief_data += f"\nVideo: {v['title']}\nYouTuber: {v['channel']}\nSkóre: {v.get('score','?')}/10\nShrnutí: {v.get('summary','')}\nKlíčové body: {', '.join(v.get('key_points',[]))}\nAkční krok: {v.get('action','')}\n"
+            summary = v.get("summary", "") or "Video o tematu {} od {}.".format(v["title"], v["channel"])
+            kp = [p for p in v.get("key_points", []) if p]
+            action = _fmt_action(v.get("action", ""))
+            brief_data += "\nVideo: {}\nYouTuber: {}\nSkore: {}/10\nShrnuti: {}\n".format(
+                v["title"], v["channel"], v.get("score","?"), summary)
+            if kp:
+                brief_data += "Klicove body: {}\n".format(", ".join(kp))
+            if action:
+                brief_data += "Co vyzkousit: {}\n".format(action)
 
     if medium:
         brief_data += "\n=== MEDIUM RELEVANCE VIDEA ===\n"
-        for v in medium[:5]:
-            brief_data += f"\nVideo: {v['title']}\nYouTuber: {v['channel']}\nSkóre: {v.get('score','?')}/10\nShrnutí: {v.get('summary','')}\nAkční krok: {v.get('action','')}\n"
+        for v in medium[:6]:
+            summary = v.get("summary", "") or "Video o tematu {}.".format(v["title"])
+            action = _fmt_action(v.get("action", ""))
+            brief_data += "\nVideo: {}\nYouTuber: {}\nSkore: {}/10\nShrnuti: {}\n".format(
+                v["title"], v["channel"], v.get("score","?"), summary)
+            if action:
+                brief_data += "Tip: {}\n".format(action)
 
     if not high and not medium:
-        return f"Dobré ráno Ivo! Dnes {today} žádná nová relevantní videa v queue. Přidej něco do AIVOS Queue playlistu a zítra si to poslechnem. Hodně štěstí v práci!"
+        return "Dobre rano Ivo! Dnes {} zadna nova relevantni videa v queue. Pridej neco do AIVOS Queue playlistu a zitra si to poslechneme. Hodne stesti v praci!".format(today)
 
     prompt = PODCAST_PROMPT.format(brief_data=brief_data)
     try:
         script = model.generate_content(prompt).text.strip()
+        script = script.replace("Akcni krok: N/A", "").replace("N/A", "").strip()
         return script
     except Exception as e:
-        print(f"  ⚠️  Podcast script error: {e}")
-        # Fallback – jednoduchý skript
-        lines = [f"Dobré ráno Ivo! Dnes {today} mám pro tebe {len(high)} důležitých a {len(medium)} zajímavých videí."]
+        print("  Podcast script error: {}".format(e))
+        lines = ["Dobre rano Ivo! Dnes {} mam pro tebe {} dulezitych a {} zajimavych videi.".format(today, len(high), len(medium))]
         for v in high:
-            lines.append(f"Video {v['title']} od {v['channel']}. {v.get('summary','')} Akční krok: {v.get('action','')}.")
+            summary = v.get("summary", "") or "Video o {}.".format(v["title"])
+            lines.append("Video {} od {}. {}".format(v["title"], v["channel"], summary))
         for v in medium[:3]:
-            lines.append(f"Také {v['title']}. {v.get('summary','')}.")
-        lines.append("To je vše pro dnešní ráno. Hodně štěstí!")
+            summary = v.get("summary", "") or "Video o {}.".format(v["title"])
+            lines.append("Take {}. {}".format(v["title"], summary))
+        lines.append("To je vse pro dnesni rano. Hodne stesti!")
         return " ".join(lines)
+
 
 async def text_to_mp3(text: str, output_path: str):
     """edge-tts: text → .mp3"""
