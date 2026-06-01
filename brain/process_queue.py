@@ -189,7 +189,33 @@ def get_transcript(video: dict) -> tuple[str, str]:
         return transcript, "yt-dlp"
     return "", "none"
 
+HIGH_KEYWORDS = [
+    "claude code", "mcp", "databricks", "azure data factory",
+    "rag", "langchain", "n8n", "second brain", "data engineering",
+    "python data", "pyspark", "dp-700", "fabric", "gemini", "ai",
+    "azure", "llm", "vector", "embedding", "agent", "automation",
+    "notion", "obsidian", "pkm", "knowledge base",
+]
+
+HIGH_CHANNELS = [
+    "data with baraa", "networkchuck", "fireship", "andrej karpathy",
+    "karpathy", "techwithtim", "coding with lewis",
+]
+
+def keyword_boost(title: str, channel: str) -> int | None:
+    """Vrátí score 9 pokud title nebo channel obsahuje HIGH keyword. Jinak None."""
+    title_lower = title.lower()
+    channel_lower = channel.lower()
+    if any(kw in title_lower for kw in HIGH_KEYWORDS):
+        return 9
+    if any(ch in channel_lower for ch in HIGH_CHANNELS):
+        return 9
+    return None
+
 def triage_video(video: dict, transcript: str, model) -> dict:
+    # Keyword pre-filter – přeskočí Gemini triage rozhodnutí, ale stále získá shrnutí
+    forced_score = keyword_boost(video["title"], video["channel"])
+
     prompt = TRIAGE_PROMPT.format(
         title=video["title"],
         channel=video["channel"],
@@ -199,8 +225,21 @@ def triage_video(video: dict, transcript: str, model) -> dict:
         text = model.generate_content(prompt).text.strip()
     except Exception as e:
         print(f"  ⚠️  Gemini error: {e}")
-        return {"score": 5, "triage": "🟡 MEDIUM", "summary": "", "key_points": [], "action": "N/A", "tags": ""}
-    return _parse_triage(text)
+        result = {"score": 5, "triage": "🟡 MEDIUM", "summary": "", "key_points": [], "action": "N/A", "tags": ""}
+        if forced_score:
+            result["score"] = forced_score
+            result["triage"] = "🟢 HIGH"
+        return result
+
+    result = _parse_triage(text)
+
+    # Override triage pokud keyword match
+    if forced_score and result["score"] < forced_score:
+        result["score"] = forced_score
+        result["triage"] = "🟢 HIGH"
+        print(f"  ⚡ Keyword boost → 🟢 HIGH (9/10)")
+
+    return result
 
 def _parse_triage(text: str) -> dict:
     r = {"score": 1, "triage": "🔴 LOW", "summary": "", "key_points": [], "action": "N/A", "tags": ""}
