@@ -1,12 +1,553 @@
 {
   "date": "2026-06-01",
-  "text": "Dobré ráno. AIVOS Brain Brief pro 2026-06-01.\nDnes 40 nových videí. Vysoko relevantních: 0. Středně: 0. Přeskočených: 40.\n\nDnes žádná relevantní videa. Hodný den na práci.\nTo je vše pro dnešní ráno. Hodně štěstí.",
+  "text": "Dobré ráno. AIVOS Brain Brief pro 2026-06-01.\nDnes 60 nových videí. Vysoko relevantních: 0. Středně: 60. Přeskočených: 0.\n\nZajímavé:\nSkóre 5. 9 Claude Code Plugins to Build 10x Faster.\n\n\nSkóre 5. Never hit Claudes Usage Limit Again.\n\n\nSkóre 5. How Claude Code's Creator ACTUALLY Automates his work.\n\n\nTo je vše. Hodně štěstí.",
   "stats": {
     "high": 0,
-    "medium": 0,
-    "low": 40,
-    "total": 40
+    "medium": 60,
+    "low": 0,
+    "total": 60
   },
   "high": [],
-  "medium": []
+  "medium": [
+    {
+      "title": "9 Claude Code Plugins to Build 10x Faster",
+      "channel": "Austin Marchese",
+      "url": "https://youtube.com/watch?v=sBF3UumkL4Y",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Never hit Claudes Usage Limit Again",
+      "channel": "Dubibubii",
+      "url": "https://youtube.com/watch?v=2f7ZkImNHFo",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "How Claude Code's Creator ACTUALLY Automates his work",
+      "channel": "Austin Marchese",
+      "url": "https://youtube.com/watch?v=jdLFeBkiy3M",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "9 Claude Moves Senior Leaders Use (And How You Can Too)",
+      "channel": "Vineet Love | AI × Cybersecurity",
+      "url": "https://youtube.com/watch?v=zJTOjEHFCKA",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "This kubernetes homelab setup is my favorite one yet.",
+      "channel": "Mischa van den Burg",
+      "url": "https://youtube.com/watch?v=S7sJA51CxIo",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "AZ 700 Day 1   Azure VNets Explained Simply",
+      "channel": "The Logic of Success",
+      "url": "https://youtube.com/watch?v=oKpkzVpL6Bg",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Fine Tuning LLMs Explained | LoRA, QLoRA & Domain-Specific AI Models | Gen AI Course Lecture 10",
+      "channel": "AI Hints",
+      "url": "https://youtube.com/watch?v=OFj62u2vZm4",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Prompt Engineering Techniques Explained | Chain of Thought, Role Prompting, Tree of Thoughts",
+      "channel": "AI Hints",
+      "url": "https://youtube.com/watch?v=josO3tVSMUk",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "I Wasted 2 Years Learning DevOps Wrong. Here's What I'd Do Instead.",
+      "channel": "TechWorld with Nana",
+      "url": "https://youtube.com/watch?v=9FKqsCVOD_Y",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Drobné stavby (40 m2) – co to vlastně je?",
+      "channel": "Online projektant",
+      "url": "https://youtube.com/watch?v=RZAKBtPD7Ps",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Winners & Losers of the AI Disruption of Search | AirOps & Kevin Indig",
+      "channel": "AirOps | The growth platform for AI search",
+      "url": "https://youtube.com/watch?v=hpioGZK40Yc",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Používáš Claude AI špatně. 90 % lidí zamrzlo na úrovni 1",
+      "channel": "Radek Bárta",
+      "url": "https://youtube.com/watch?v=BhmgXxNDflQ",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "I Tried Every Popular Claude Skills System, Here is the Best",
+      "channel": "Rob Shocks",
+      "url": "https://youtube.com/watch?v=VoxL_YmHR-I",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Learn 97% of Claude in Under 16 Minutes",
+      "channel": "Dan Martell",
+      "url": "https://youtube.com/watch?v=wZeOwqmSw84",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Kaparthy revealed the most profitable business to build in 2026 (Software 3.0)",
+      "channel": "Dream Labs AI",
+      "url": "https://youtube.com/watch?v=hJNp9RwK-Uw",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Software engineering at the tipping point",
+      "channel": "Google for Developers",
+      "url": "https://youtube.com/watch?v=2n41YjR5QfU",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Create Your Own Personal Claude AI System (That Makes Your Work EASY)",
+      "channel": "Simon Scrapes",
+      "url": "https://youtube.com/watch?v=IevmGCVo9Pw",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "7 Claude Code Tools To Stop Wasting Tokens",
+      "channel": "Sean Kochel",
+      "url": "https://youtube.com/watch?v=bhB57Meachc",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "You’re Not Behind (Yet): Learn AI Agents in 13 Minutes",
+      "channel": "theMITmonk",
+      "url": "https://youtube.com/watch?v=P5sKKnWCvzk",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "You're Automating The Wrong Layer (How 30,000 People Build AI Without Frameworks)",
+      "channel": "Jake Van Clief",
+      "url": "https://youtube.com/watch?v=956DPSPX4wg",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "The Agentic Engineer Workflow You Need In 2026",
+      "channel": "Zen van Riel",
+      "url": "https://youtube.com/watch?v=ElYxdpYi4U0",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Claude Skills Explained Simply (Master in 7 Minutes)",
+      "channel": "Tristen O'Brien",
+      "url": "https://youtube.com/watch?v=O6tQ6V_P8a0",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "How I deleted 95% of my agent skills and got better results — Nick Nisi, WorkOS",
+      "channel": "AI Engineer",
+      "url": "https://youtube.com/watch?v=vy7o1g2iHY8",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "This “Karpathy file” will 10x your claude output (132,000 Github Stars!)",
+      "channel": "Dream Labs AI",
+      "url": "https://youtube.com/watch?v=hzQie4EucY0",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "How To Make Passive Income On Day 1 With Claude (New Method)",
+      "channel": "Thinkverse AI",
+      "url": "https://youtube.com/watch?v=rAvOFvIK4Rw",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "The AI Skill I Rely On Daily — Priscila Andre de Oliveira, Sentry",
+      "channel": "AI Engineer",
+      "url": "https://youtube.com/watch?v=li0SaBt9RDM",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Nigeria to UK: How He Became a DevOps Engineer Before His Visa Ran Out",
+      "channel": "TechWorld with Nana",
+      "url": "https://youtube.com/watch?v=YTIvpuV6I20",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "The 7 Levels of AI User (and how to level up)",
+      "channel": "Futurepedia",
+      "url": "https://youtube.com/watch?v=JFO9TfZLnT8",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "3 misunderstood ways to bypass the ATS",
+      "channel": "Career Growth With Lucy",
+      "url": "https://youtube.com/watch?v=Aocs9L3Bdy0",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "You're Learning AI Wrong. Here's The Cheat Sheet.",
+      "channel": "AI Founders",
+      "url": "https://youtube.com/watch?v=Zd8dA7bijzo",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Every Hermes Concept explained for Normal People",
+      "channel": "Jack Roberts",
+      "url": "https://youtube.com/watch?v=L0tQrTQBmjI",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "How I build $10,000 AI Websites in 17 mins (Google AI Studio 2.0)",
+      "channel": "Jack Roberts",
+      "url": "https://youtube.com/watch?v=PsE9u37gJjU",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Stop Using Claude Code CLI. Use THIS Instead! (Oh-My-Pi)",
+      "channel": "Better Stack",
+      "url": "https://youtube.com/watch?v=8ukl-0tlVgM",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "The 3-2-1 Speaking Trick That Forces You To Stop Rambling!",
+      "channel": "Vinh Giang",
+      "url": "https://youtube.com/watch?v=5m-C5mwpmxU",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Jordan Peterson - How to Remember Everything You Read",
+      "channel": "Better Chapter",
+      "url": "https://youtube.com/watch?v=ch55SHnLs_M",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "This Repo Gives Claude Code a Brain, 30k Stars on GitHub",
+      "channel": "Bitwise AI",
+      "url": "https://youtube.com/watch?v=aA-piqGXKUI",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "The 17 Second Technique That Starts Rewiring Your Brain (neuroscience backed)",
+      "channel": "Sabah Ali",
+      "url": "https://youtube.com/watch?v=StHnViVMBqo",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Improve Your Critical Thinking With This Framework",
+      "channel": "Communication Coach Alexander Lyon",
+      "url": "https://youtube.com/watch?v=01_kyKpfM20",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "WHY HEALING YOURSELF IS YOUR TRUE LIFE PURPOSE | Shi Heng Yi",
+      "channel": "HeavenlyBody",
+      "url": "https://youtube.com/watch?v=Sr8vDuqXL-k",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Silicon Valley AI Expert: These 3 Jobs Will EXPLODE in the next 5 Years",
+      "channel": "Sajjaad Khader",
+      "url": "https://youtube.com/watch?v=EpgY5iE4rhI",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "An AI productivity crisis is coming for employers | Natasha Bernal",
+      "channel": "The Tech Report",
+      "url": "https://youtube.com/watch?v=vclKFMHfH4Y",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Never React, Never Explain, Just Ignore",
+      "channel": "The Mindset Mentor Podcast",
+      "url": "https://youtube.com/watch?v=WMlVzUXbYZc",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Dr. Gabor Maté: The #1 Reason You Never Feel Like You’re Enough (And How to Fix it)",
+      "channel": "Jay Shetty Podcast",
+      "url": "https://youtube.com/watch?v=TU5GRuqyImI",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "The Math Behind “AI Will Replace Engineers” Is Embarrassingly Wrong​​​​​​​​​​​​​​​​",
+      "channel": "Jovan EEN",
+      "url": "https://youtube.com/watch?v=ItSLny8on5I",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "\"A.I. and Our Economic Future,\" Professor Chad Jones",
+      "channel": "Stanford Graduate School of Business",
+      "url": "https://youtube.com/watch?v=xBpGn3BDcOY",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Gemini Spark Is Here: Full Breakdown and Use Cases",
+      "channel": "Paul J Lipsky",
+      "url": "https://youtube.com/watch?v=jHFPnqqGC6M",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Creator of C# and TypeScript: \"AI will NEVER Replace Coders, Here's Why\" | Anders Hejlsberg",
+      "channel": "Sajjaad Khader",
+      "url": "https://youtube.com/watch?v=CPrePbvbbic",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Claude Ultracode will 10x your workflows",
+      "channel": "Jay E | RoboNuggets",
+      "url": "https://youtube.com/watch?v=2rhZOisVXZM",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Claude 4.8 Is A Beast… But There’s A Big Problem",
+      "channel": "AI Revolution",
+      "url": "https://youtube.com/watch?v=AYSy4N8zgxQ",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "The 5-Tool Fix for Claude Code's Worst Habits",
+      "channel": "Sean Kochel",
+      "url": "https://youtube.com/watch?v=hqcZZuvBUSY",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Five AI Risks That Can Get You Fired—And How to Avoid Them",
+      "channel": "IBM Technology",
+      "url": "https://youtube.com/watch?v=1m55T8xST9s",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Why AI Agents are either the best or worst thing we’ve ever built",
+      "channel": "Hannah Fry",
+      "url": "https://youtube.com/watch?v=WnzR5aOElvw",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Zig 2026: No-AI Policy, $670K Foundation, Left GitHub & Why Zig Isn’t 1.0 - Andrew Kelley Explains",
+      "channel": "JetBrains",
+      "url": "https://youtube.com/watch?v=iqddnwKF8HQ",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "ALERT: Microsoft Killed Claude Code Not Because It Failed - AI Billing Is Broken at Scale",
+      "channel": "AIM Network",
+      "url": "https://youtube.com/watch?v=pF4Ovay98nA",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "9 Things People Get Wrong With My /grill-* skills",
+      "channel": "Matt Pocock",
+      "url": "https://youtube.com/watch?v=UzMNBN6xLLA",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "AI Didn’t Kill Developer Jobs — It Changed The Work",
+      "channel": "Stefan Mischook",
+      "url": "https://youtube.com/watch?v=6SBGYAff-so",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "If you’re trying to get rich with AI, you need to hear this…",
+      "channel": "Dan Martell",
+      "url": "https://youtube.com/watch?v=TWuzAO7ukk0",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "How Git Works: Explained in 4 Minutes",
+      "channel": "ByteByteGo",
+      "url": "https://youtube.com/watch?v=e9lnsKot_SQ",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "A CS Professor on Why Slow Learning Wins in the AI Era | CU Boulder, Tom Yeh",
+      "channel": "EO",
+      "url": "https://youtube.com/watch?v=BAgxGp2WEu4",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    },
+    {
+      "title": "Can Cursor's HARDCORE Review Skill Stop The Slop?",
+      "channel": "Matt Pocock",
+      "url": "https://youtube.com/watch?v=mh5XZ-L5SFQ",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5
+    }
+  ]
 }
