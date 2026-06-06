@@ -38,6 +38,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git add -A
           git diff --staged --quiet || git commit -m "🧠 Brain Feed $(date +%Y-%m-%d) [skip ci]"
+          git pull --rebase origin main
           git push
       - name: 📤 Push briefs do AIVOS
         env:
