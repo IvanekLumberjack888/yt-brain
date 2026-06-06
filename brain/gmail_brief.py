@@ -5,6 +5,7 @@ Používá IMAP + App Password (bez OAuth složitosti)
 import imaplib
 import email
 import os
+import time
 from datetime import date, timedelta
 from email.header import decode_header as _dh
 import google.generativeai as genai
@@ -128,7 +129,7 @@ def fetch_emails(max_emails: int = 25) -> list[dict]:
         return []
 
 
-def generate_gmail_section(model) -> str:
+def generate_gmail_section(model=None) -> str:
     """
     Vrátí čistý text pro TTS – Gmail sekci ranního brefu.
     Pokud není App Password nebo žádné emaily → prázdný string.
@@ -142,13 +143,28 @@ def generate_gmail_section(model) -> str:
         for e in emails
     )
 
-    try:
-        result = model.generate_content(
-            GMAIL_PROMPT.format(emails_text=emails_text)
-        ).text.strip()
-        print(f"  ✅ Gmail brief vygenerován ({len(result)} znaků)")
-        return result
-    except Exception as e:
-        print(f"  ⚠️ Gmail Gemini error: {e}")
-        n = len(emails)
-        return f"Dnes ti přišlo {n} emailů. Podívej se do inboxu až budeš mít chvilku."
+    prompt = GMAIL_PROMPT.format(emails_text=emails_text)
+    models_to_try = ["gemini-1.5-flash-8b", "gemini-2.0-flash", "gemini-1.5-flash"]
+
+    for model_name in models_to_try:
+        for attempt in range(3):
+            try:
+                m = genai.GenerativeModel(model_name)
+                result = m.generate_content(prompt).text.strip()
+                print(f"  ✅ Gmail brief vygenerován ({len(result)} znaků) [{model_name}]")
+                return result
+            except Exception as e:
+                if "429" in str(e):
+                    if attempt < 2:
+                        wait = (attempt + 1) * 20
+                        print(f"  ⏳ Rate limit ({model_name}), čekám {wait}s...")
+                        time.sleep(wait)
+                    else:
+                        print(f"  ⚠️ {model_name} rate limit vyčerpán, zkouším další model...")
+                        break
+                else:
+                    print(f"  ⚠️ Gmail Gemini error ({model_name}): {e}")
+                    break
+
+    n = len(emails)
+    return f"Dnes ti přišlo {n} emailů. Podívej se do inboxu až budeš mít chvilku."
