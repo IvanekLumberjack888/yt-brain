@@ -1,13 +1,45 @@
 {
   "date": "2026-06-06",
-  "text": "Dobré ráno Ivo! Dnes 2026-06-06 žádná nová videa v AIVOS Queue. Hodně štěstí v práci!",
+  "text": "Dobre rano Ivo! Dnes 2026-06-06 mam pro tebe 2 dulezitych a 1 zajimavych videi. Video I Helped My 50-Year-Old Brother Build a One Person AI Business In 1 Month ($214/Day With Claude) od Shane Hummus. Video o I Helped My 50-Year-Old Brother Build a One Person AI Business In 1 Month ($214/Day With Claude). Video AI novinky - Špekulácie o Mythos, GPT 5.6 a top pluginy v Codex! 🔥 od Zaujaloma AI. Video o AI novinky - Špekulácie o Mythos, GPT 5.6 a top pluginy v Codex! 🔥. Take Design with me ⭐️ Real client website using Figma, Claude & Webflow (full process). Video o Design with me ⭐️ Real client website using Figma, Claude & Webflow (full process). To je vse pro dnesni rano. Hodne stesti!",
   "stats": {
-    "high": 0,
-    "medium": 0,
+    "high": 2,
+    "medium": 1,
     "low": 0,
-    "total": 0
+    "total": 3
   },
-  "high": [],
-  "medium": [],
+  "high": [
+    {
+      "title": "I Helped My 50-Year-Old Brother Build a One Person AI Business In 1 Month ($214/Day With Claude)",
+      "channel": "Shane Hummus",
+      "url": "https://youtube.com/watch?v=VsSvHd1bO04",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 9,
+      "key_points": []
+    },
+    {
+      "title": "AI novinky - Špekulácie o Mythos, GPT 5.6 a top pluginy v Codex! 🔥",
+      "channel": "Zaujaloma AI",
+      "url": "https://youtube.com/watch?v=NW5YqB9S4-I",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 9,
+      "key_points": []
+    }
+  ],
+  "medium": [
+    {
+      "title": "Design with me ⭐️ Real client website using Figma, Claude & Webflow (full process)",
+      "channel": "Anna Dawson",
+      "url": "https://youtube.com/watch?v=BKs0XM0nYrk",
+      "summary": "",
+      "action": "N/A",
+      "tags": "",
+      "score": 5,
+      "key_points": []
+    }
+  ],
   "has_audio": true
 }
