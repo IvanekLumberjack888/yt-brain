@@ -144,7 +144,7 @@ def generate_gmail_section(model=None) -> str:
     )
 
     prompt = GMAIL_PROMPT.format(emails_text=emails_text)
-    models_to_try = ["gemini-1.5-flash-8b", "gemini-2.0-flash", "gemini-1.5-flash"]
+    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b-latest"]
 
     for model_name in models_to_try:
         for attempt in range(3):
