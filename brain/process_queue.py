@@ -1,6 +1,7 @@
 """
 brain/process_queue.py – AIVOS Brain Feed (Stage 2)
 Triage + podcast script + edge-tts .mp3
+Max 10 videí per run, sleep 8s mezi Gemini calls.
 """
 import os, json, re, glob, subprocess, tempfile, sys, asyncio, time
 from datetime import date
@@ -10,7 +11,6 @@ warnings.filterwarnings("ignore")
 import google.generativeai as genai
 import edge_tts
 
-# Gmail brief (volitelný – funguje i bez něj)
 try:
     import gmail_brief as _gmail
     _GMAIL_AVAILABLE = True
@@ -27,9 +27,8 @@ BRIEFS_DIR      = ROOT / "public" / "briefs"
 GEMINI_MODEL    = "gemini-2.0-flash"
 MAX_TRANSCRIPT  = 10000
 TTS_VOICE       = "cs-CZ-AntoninNeural"
-RATE_LIMIT_SLEEP = 15  # seconds between Gemini calls (free tier = ~15 req/min)
-
-# ─── TRIAGE PROMPT ──────────────────────────────────────────────────────────
+RATE_LIMIT_SLEEP = 8
+MAX_VIDEOS_PER_RUN = 10
 
 TRIAGE_PROMPT = """Jsi osobní knowledge kurátor pro Iva – Junior Data Engineera (Konica Minolta, Azure stack).
 Ivo má neurodivergentní profil (ADHD-PI, INTJ). Chce growth v IT + AI + osobním životě.
@@ -96,8 +95,6 @@ TAGS: [#tag1 #tag2 #tag3]
 
 Pro SCORE 1-4: pouze SCORE, TRIAGE a CATEGORY."""
 
-# ─── PODCAST SCRIPT PROMPT ──────────────────────────────────────────────────
-
 PODCAST_PROMPT = """Jsi moderátor tech podcastu "AIVOS Brain Brief" pro Iva – Junior Data Engineera.
 Napiš skript pro ranní poslech v autě. Mluv přímo na Iva, přátelsky ale věcně. Česky.
 Technické termíny anglicky. Délka: 8–15 minut čteného textu.
@@ -117,8 +114,6 @@ Gmail sekce:
 
 YouTube data:
 {brief_data}"""
-
-# ─── HELPERS ────────────────────────────────────────────────────────────────
 
 def load_json(path: Path, default):
     if path.exists():
@@ -214,7 +209,6 @@ def keyword_boost(title: str, channel: str) -> int | None:
     return None
 
 def gemini_with_retry(model, prompt: str, max_retries: int = 3) -> str:
-    """Volá Gemini s retry logikou při rate limit chybě."""
     for attempt in range(max_retries):
         try:
             return model.generate_content(prompt).text.strip()
@@ -222,7 +216,7 @@ def gemini_with_retry(model, prompt: str, max_retries: int = 3) -> str:
             err = str(e)
             if "429" in err or "quota" in err.lower() or "rate" in err.lower():
                 wait = 60 * (attempt + 1)
-                print(f"  ⏳ Rate limit hit, čekám {wait}s (pokus {attempt+1}/{max_retries})...")
+                print(f"  ⏳ Rate limit, čekám {wait}s (pokus {attempt+1}/{max_retries})...")
                 time.sleep(wait)
             else:
                 raise
@@ -314,7 +308,7 @@ def _fmt_action(action: str) -> str:
 
 def generate_podcast_script(results: list, today: str, model,
                              gmail_section: str = "") -> str:
-    high   = [v for v in results if "🟢" in v["triage"]]
+    high  = [v for v in results if "🟢" in v["triage"]]
     medium = [v for v in results if "🟡" in v["triage"]]
     low_n  = sum(1 for v in results if "🔴" in v["triage"])
 
@@ -347,7 +341,6 @@ def generate_podcast_script(results: list, today: str, model,
                 f"Přidej něco do AIVOS Queue playlistu a zítra si to poslechneme. Hodně štěstí v práci!")
 
     gmail_text = gmail_section if gmail_section else "Dnes žádné důležité emaily – inbox je čistý."
-
     prompt = PODCAST_PROMPT.format(gmail_section=gmail_text, brief_data=brief_data)
     try:
         script = gemini_with_retry(model, prompt)
@@ -416,8 +409,6 @@ def save_brief(results: list, today: str, podcast_script: str, gmail_section: st
     save_json(index_path, index)
     print("📄 Brief JSON uložen.")
 
-# ─── MAIN ───────────────────────────────────────────────────────────────────
-
 def main():
     today = date.today().isoformat()
     print(f"\n🧠 AIVOS process_queue | {today}\n")
@@ -429,7 +420,6 @@ def main():
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(GEMINI_MODEL)
 
-    # Gmail sekce
     gmail_section = ""
     if _GMAIL_AVAILABLE:
         print("📬 Načítám Gmail...")
@@ -437,15 +427,19 @@ def main():
 
     queue     = load_json(QUEUE_FILE, [])
     processed = set(load_json(PROCESSED_FILE, []))
-    new_videos = [v for v in queue if v["video_id"] not in processed]
-    print(f"📥 Queue: {len(queue)} celkem | {len(new_videos)} nových\n")
+    all_new   = [v for v in queue if v["video_id"] not in processed]
+    new_videos = all_new[:MAX_VIDEOS_PER_RUN]
+    remaining  = len(all_new) - len(new_videos)
+
+    print(f"📥 Queue: {len(queue)} celkem | {len(all_new)} nových | zpracuji {len(new_videos)} (max {MAX_VIDEOS_PER_RUN}/run)")
+    if remaining > 0:
+        print(f"  ℹ️  {remaining} videí zbývá na příští run\n")
 
     if not new_videos:
         print("✅ Nic nového v queue.")
         if gmail_section:
             script = (f"Dobré ráno Ivo! Dnes {today} žádná nová videa v AIVOS Queue. "
-                      f"Ale mám pro tebe přehled emailů. {gmail_section} "
-                      f"Hodně štěstí v práci!")
+                      f"Ale mám pro tebe přehled emailů. {gmail_section} Hodně štěstí v práci!")
         else:
             script = f"Dobré ráno Ivo! Dnes {today} žádná nová videa v AIVOS Queue. Hodně štěstí v práci!"
         save_brief([], today, script, gmail_section)
@@ -464,21 +458,20 @@ def main():
             save_summary(video, analysis, today, source)
         processed.add(video["video_id"])
         results.append({**video, **analysis})
-        # Rate limit ochrana – sleep mezi voláními Gemini
         if i < len(new_videos):
-            print(f"  ⏳ Rate limit sleep {RATE_LIMIT_SLEEP}s...")
+            print(f"  ⏳ Sleep {RATE_LIMIT_SLEEP}s...")
             time.sleep(RATE_LIMIT_SLEEP)
 
     save_json(PROCESSED_FILE, list(processed))
-    save_json(QUEUE_FILE, [])
+    save_json(QUEUE_FILE, [v for v in queue if v["video_id"] not in processed])
 
     print("\n🎙️ Generuji podcast skript...")
     podcast_script = generate_podcast_script(results, today, model, gmail_section)
     print(f"  Délka skriptu: {len(podcast_script)} znaků (~{len(podcast_script)//15} sekund)")
 
     print("🔊 Převádím na audio...")
-    mp3_path   = str(BRIEFS_DIR / "latest_brief.mp3")
-    dated_mp3  = str(BRIEFS_DIR / f"{today}_brief.mp3")
+    mp3_path  = str(BRIEFS_DIR / "latest_brief.mp3")
+    dated_mp3 = str(BRIEFS_DIR / f"{today}_brief.mp3")
     asyncio.run(text_to_mp3(podcast_script, mp3_path))
     asyncio.run(text_to_mp3(podcast_script, dated_mp3))
     print(f"  ✅ Audio: {mp3_path}")
@@ -489,6 +482,8 @@ def main():
     m = sum(1 for r in results if "🟡" in r["triage"])
     l = sum(1 for r in results if "🔴" in r["triage"])
     print(f"\n📊 🟢 {h} | 🟡 {m} | 🔴 {l}")
+    if remaining > 0:
+        print(f"  ℹ️  {remaining} videí čeká na zpracování zítra")
     print("🏁 Hotovo.\n")
 
 if __name__ == "__main__":
