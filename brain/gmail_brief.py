@@ -6,12 +6,14 @@ import imaplib
 import email
 import os
 import time
+import socket
 from datetime import date, timedelta
 from email.header import decode_header as _dh
 import google.generativeai as genai
 
 GMAIL_USER         = os.environ.get("GMAIL_USER", "ivousd@gmail.com")
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
+IMAP_TIMEOUT       = 20  # seconds
 
 GMAIL_PROMPT = """Jsi osobní asistent Iva (Junior Data Engineer, ADHD-PI, INTJ).
 Analyzuj dnešní emaily a vytvoř stručný přehled pro ranní poslech v autě.
@@ -35,7 +37,6 @@ DŮLEŽITÉ: výstup je čistý text pro text-to-speech. Žádný markdown, žá
 
 
 def _decode(value: str) -> str:
-    """Dekóduje email header."""
     try:
         parts = _dh(value or "")
         out = []
@@ -50,12 +51,14 @@ def _decode(value: str) -> str:
 
 
 def fetch_emails(max_emails: int = 25) -> list[dict]:
-    """Fetchne emaily z posledních 24h přes IMAP."""
     if not GMAIL_APP_PASSWORD:
         print("  ℹ️ GMAIL_APP_PASSWORD není nastaven – přeskakuji Gmail sekci.")
         return []
 
     try:
+        # Nastav socket timeout před připojením
+        socket.setdefaulttimeout(IMAP_TIMEOUT)
+
         mail = imaplib.IMAP4_SSL("imap.gmail.com", 993)
         mail.login(GMAIL_USER, GMAIL_APP_PASSWORD)
         mail.select("inbox")
@@ -68,10 +71,8 @@ def fetch_emails(max_emails: int = 25) -> list[dict]:
             mail.logout()
             return []
 
-        # Vezmi posledních max_emails (nejnovější)
         msg_ids = msg_ids[-max_emails:]
 
-        # Ignorovat odesílatele
         SKIP_SENDERS = [
             "noreply@skool.com", "notifications@github.com",
             "no-reply@accounts.google.com", "no-reply@vercel.com",
@@ -79,7 +80,7 @@ def fetch_emails(max_emails: int = 25) -> list[dict]:
         ]
 
         results = []
-        for mid in reversed(msg_ids):  # nejnovější první
+        for mid in reversed(msg_ids):
             try:
                 _, data = mail.fetch(mid, "(RFC822)")
                 msg = email.message_from_bytes(data[0][1])
@@ -87,11 +88,9 @@ def fetch_emails(max_emails: int = 25) -> list[dict]:
                 sender  = _decode(msg.get("From", ""))
                 subject = _decode(msg.get("Subject", ""))
 
-                # Skip bulk senders
                 if any(s in sender.lower() for s in SKIP_SENDERS):
                     continue
 
-                # Tělo emailu
                 body = ""
                 if msg.is_multipart():
                     for part in msg.walk():
@@ -124,16 +123,18 @@ def fetch_emails(max_emails: int = 25) -> list[dict]:
     except imaplib.IMAP4.error as e:
         print(f"  ⚠️ Gmail auth error: {e}")
         return []
+    except socket.timeout:
+        print(f"  ⚠️ Gmail IMAP timeout po {IMAP_TIMEOUT}s – přeskakuji")
+        return []
     except Exception as e:
         print(f"  ⚠️ Gmail IMAP error: {e}")
         return []
+    finally:
+        # Reset socket timeout na default
+        socket.setdefaulttimeout(None)
 
 
 def generate_gmail_section(model=None) -> str:
-    """
-    Vrátí čistý text pro TTS – Gmail sekci ranního brefu.
-    Pokud není App Password nebo žádné emaily → prázdný string.
-    """
     emails = fetch_emails()
     if not emails:
         return ""
