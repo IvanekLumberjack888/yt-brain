@@ -2,7 +2,7 @@
 brain/process_queue.py – AIVOS Brain Feed (Stage 2)
 Triage + podcast script + edge-tts .mp3
 """
-import os, json, re, glob, subprocess, tempfile, sys, asyncio
+import os, json, re, glob, subprocess, tempfile, sys, asyncio, time
 from datetime import date
 from pathlib import Path
 import warnings
@@ -27,6 +27,7 @@ BRIEFS_DIR      = ROOT / "public" / "briefs"
 GEMINI_MODEL    = "gemini-2.0-flash"
 MAX_TRANSCRIPT  = 10000
 TTS_VOICE       = "cs-CZ-AntoninNeural"
+RATE_LIMIT_SLEEP = 15  # seconds between Gemini calls (free tier = ~15 req/min)
 
 # ─── TRIAGE PROMPT ──────────────────────────────────────────────────────────
 
@@ -212,6 +213,21 @@ def keyword_boost(title: str, channel: str) -> int | None:
         return 9
     return None
 
+def gemini_with_retry(model, prompt: str, max_retries: int = 3) -> str:
+    """Volá Gemini s retry logikou při rate limit chybě."""
+    for attempt in range(max_retries):
+        try:
+            return model.generate_content(prompt).text.strip()
+        except Exception as e:
+            err = str(e)
+            if "429" in err or "quota" in err.lower() or "rate" in err.lower():
+                wait = 60 * (attempt + 1)
+                print(f"  ⏳ Rate limit hit, čekám {wait}s (pokus {attempt+1}/{max_retries})...")
+                time.sleep(wait)
+            else:
+                raise
+    raise Exception(f"Gemini selhal po {max_retries} pokusech")
+
 def triage_video(video: dict, transcript: str, model) -> dict:
     forced_score = keyword_boost(video["title"], video["channel"])
     prompt = TRIAGE_PROMPT.format(
@@ -220,7 +236,7 @@ def triage_video(video: dict, transcript: str, model) -> dict:
         transcript=transcript or "(transkript nedostupný – hodnoť jen z názvu a kanálu)"
     )
     try:
-        text = model.generate_content(prompt).text.strip()
+        text = gemini_with_retry(model, prompt)
     except Exception as e:
         print(f"  ⚠️ Gemini error: {e}")
         result = {"score": 5, "triage": "🟡 MEDIUM", "category": "AI",
@@ -334,7 +350,7 @@ def generate_podcast_script(results: list, today: str, model,
 
     prompt = PODCAST_PROMPT.format(gmail_section=gmail_text, brief_data=brief_data)
     try:
-        script = model.generate_content(prompt).text.strip()
+        script = gemini_with_retry(model, prompt)
         script = script.replace("Akční krok: N/A", "").replace("N/A", "").strip()
         return script
     except Exception as e:
@@ -448,6 +464,10 @@ def main():
             save_summary(video, analysis, today, source)
         processed.add(video["video_id"])
         results.append({**video, **analysis})
+        # Rate limit ochrana – sleep mezi voláními Gemini
+        if i < len(new_videos):
+            print(f"  ⏳ Rate limit sleep {RATE_LIMIT_SLEEP}s...")
+            time.sleep(RATE_LIMIT_SLEEP)
 
     save_json(PROCESSED_FILE, list(processed))
     save_json(QUEUE_FILE, [])
