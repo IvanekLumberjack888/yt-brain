@@ -2,8 +2,9 @@
 brain/process_queue.py – AIVOS Brain Feed (Stage 2)
 Triage + podcast script + edge-tts .mp3
 Max 10 videí per run, sleep 8s mezi Gemini calls.
+Gmail s 30s timeoutem.
 """
-import os, json, re, glob, subprocess, tempfile, sys, asyncio, time
+import os, json, re, glob, subprocess, tempfile, sys, asyncio, time, signal
 from datetime import date
 from pathlib import Path
 import warnings
@@ -27,8 +28,9 @@ BRIEFS_DIR      = ROOT / "public" / "briefs"
 GEMINI_MODEL    = "gemini-2.0-flash"
 MAX_TRANSCRIPT  = 10000
 TTS_VOICE       = "cs-CZ-AntoninNeural"
-RATE_LIMIT_SLEEP = 8
+RATE_LIMIT_SLEEP   = 8
 MAX_VIDEOS_PER_RUN = 10
+GMAIL_TIMEOUT      = 30
 
 TRIAGE_PROMPT = """Jsi osobní knowledge kurátor pro Iva – Junior Data Engineera (Konica Minolta, Azure stack).
 Ivo má neurodivergentní profil (ADHD-PI, INTJ). Chce growth v IT + AI + osobním životě.
@@ -308,7 +310,7 @@ def _fmt_action(action: str) -> str:
 
 def generate_podcast_script(results: list, today: str, model,
                              gmail_section: str = "") -> str:
-    high  = [v for v in results if "🟢" in v["triage"]]
+    high   = [v for v in results if "🟢" in v["triage"]]
     medium = [v for v in results if "🟡" in v["triage"]]
     low_n  = sum(1 for v in results if "🔴" in v["triage"])
 
@@ -409,6 +411,28 @@ def save_brief(results: list, today: str, podcast_script: str, gmail_section: st
     save_json(index_path, index)
     print("📄 Brief JSON uložen.")
 
+def get_gmail_section(model) -> str:
+    """Načte Gmail sekci s timeoutem. Vrátí prázdný string při chybě."""
+    if not _GMAIL_AVAILABLE:
+        return ""
+    print("📬 Načítám Gmail...")
+    try:
+        def _timeout_handler(signum, frame):
+            raise TimeoutError("Gmail timeout po 30s")
+        signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(GMAIL_TIMEOUT)
+        result = _gmail.generate_gmail_section(model)
+        signal.alarm(0)
+        return result
+    except TimeoutError as e:
+        print(f"  ⚠️ {e} – přeskakuji Gmail")
+        signal.alarm(0)
+        return ""
+    except Exception as e:
+        print(f"  ⚠️ Gmail error: {e} – přeskakuji")
+        signal.alarm(0)
+        return ""
+
 def main():
     today = date.today().isoformat()
     print(f"\n🧠 AIVOS process_queue | {today}\n")
@@ -420,10 +444,7 @@ def main():
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(GEMINI_MODEL)
 
-    gmail_section = ""
-    if _GMAIL_AVAILABLE:
-        print("📬 Načítám Gmail...")
-        gmail_section = _gmail.generate_gmail_section(model)
+    gmail_section = get_gmail_section(model)
 
     queue     = load_json(QUEUE_FILE, [])
     processed = set(load_json(PROCESSED_FILE, []))
