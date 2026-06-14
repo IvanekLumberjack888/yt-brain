@@ -18,6 +18,18 @@ try:
 except ImportError:
     _GMAIL_AVAILABLE = False
 
+try:
+    import notion_sync as _notion
+    _NOTION_AVAILABLE = True
+except ImportError:
+    _NOTION_AVAILABLE = False
+
+try:
+    import newsletter_brief as _newsletter
+    _NEWSLETTER_AVAILABLE = True
+except ImportError:
+    _NEWSLETTER_AVAILABLE = False
+
 ROOT            = Path(__file__).parent.parent
 DATA_DIR        = ROOT / "data"
 QUEUE_FILE      = DATA_DIR / "queue.json"
@@ -247,7 +259,33 @@ def triage_video(video: dict, transcript: str, model) -> dict:
         result["score"] = forced_score
         result["triage"] = "🟢 HIGH"
         print(f"  ⚡ Keyword boost → 🟢 HIGH (9/10)")
+
+    # ── BUGFIX: HIGH/MEDIUM nikdy nesmí mít prázdné summary ──
+    # Pokud Gemini nevrátilo summary (selhání / krátký transkript / keyword boost
+    # bez obsahu), vygeneruj aspoň fallback z názvu, ať brief není prázdný.
+    if "🔴" not in result["triage"] and not result["summary"].strip():
+        if transcript and len(transcript) > 200:
+            result["summary"] = _fallback_summary(video, transcript, model)
+        else:
+            result["summary"] = (
+                f"Video „{video['title']}“ od {video['channel']}. "
+                f"Transkript nebyl dostupný – ohodnoceno podle názvu a kanálu. "
+                f"Otevři pro detail."
+            )
     return result
+
+
+def _fallback_summary(video: dict, transcript: str, model) -> str:
+    """Když hlavní triage nevrátí summary, zkus minimální samostatný call."""
+    try:
+        prompt = (
+            f"Shrň ve 2 větách česky o čem je toto video pro Data Engineera. "
+            f"Název: {video['title']}. Kanál: {video['channel']}. "
+            f"Transkript (úryvek): {transcript[:3000]}"
+        )
+        return gemini_with_retry(model, prompt, max_retries=2).strip()[:400]
+    except Exception:
+        return f"Video „{video['title']}“ od {video['channel']}. Otevři pro detail."
 
 def _parse_triage(text: str) -> dict:
     r = {"score": 1, "triage": "🔴 LOW", "category": "AI",
@@ -486,8 +524,20 @@ def main():
     save_json(PROCESSED_FILE, list(processed))
     save_json(QUEUE_FILE, [v for v in queue if v["video_id"] not in processed])
 
+    # ── Newsletter processing: Medium/HN/Dev.to digesty → triage ──
+    newsletter_results = []
+    if _NEWSLETTER_AVAILABLE:
+        print("\n📰 Zpracovávám newslettery...")
+        try:
+            newsletter_results = _newsletter.process_newsletters(model)
+        except Exception as e:
+            print(f"  ⚠️ Newsletter processing selhalo: {e}")
+
+    # Spoj videa + newsletter články pro brief i Notion
+    all_results = results + newsletter_results
+
     print("\n🎙️ Generuji podcast skript...")
-    podcast_script = generate_podcast_script(results, today, model, gmail_section)
+    podcast_script = generate_podcast_script(all_results, today, model, gmail_section)
     print(f"  Délka skriptu: {len(podcast_script)} znaků (~{len(podcast_script)//15} sekund)")
 
     print("🔊 Převádím na audio...")
@@ -497,11 +547,21 @@ def main():
     asyncio.run(text_to_mp3(podcast_script, dated_mp3))
     print(f"  ✅ Audio: {mp3_path}")
 
-    save_brief(results, today, podcast_script, gmail_section)
+    save_brief(all_results, today, podcast_script, gmail_section)
 
-    h = sum(1 for r in results if "🟢" in r["triage"])
-    m = sum(1 for r in results if "🟡" in r["triage"])
-    l = sum(1 for r in results if "🔴" in r["triage"])
+    # ── Notion sync: HIGH/MEDIUM → 00 FEED (druhý mozek persistence) ──
+    if _NOTION_AVAILABLE:
+        print("\n🗄️  Ukládám do Notion 00 FEED...")
+        try:
+            _notion.sync_to_notion(results, today, source_type="YouTube")
+            if newsletter_results:
+                _notion.sync_to_notion(newsletter_results, today, source_type="Newsletter")
+        except Exception as e:
+            print(f"  ⚠️ Notion sync selhalo: {e}")
+
+    h = sum(1 for r in all_results if "🟢" in r["triage"])
+    m = sum(1 for r in all_results if "🟡" in r["triage"])
+    l = sum(1 for r in all_results if "🔴" in r["triage"])
     print(f"\n📊 🟢 {h} | 🟡 {m} | 🔴 {l}")
     if remaining > 0:
         print(f"  ℹ️  {remaining} videí čeká na zpracování zítra")
