@@ -1,80 +1,59 @@
-"""Stage 1: Runs via GitHub Actions daily at 08:00 UTC.
-Fetches new videos from public YouTube playlist and updates queue.json.
-"""
-import json
-import os
-from pathlib import Path
-from googleapiclient.discovery import build
-
-API_KEY = os.environ["YT_API_KEY"]
-PLAYLIST_ID = os.environ["YT_PLAYLIST_ID"]
-
-DATA_DIR = Path(__file__).parent.parent / "data"
-QUEUE_FILE = DATA_DIR / "queue.json"
-PROCESSED_FILE = DATA_DIR / "processed_videos.json"
-
-
-def load_json(path: Path, default):
-    if path.exists():
-        return json.loads(path.read_text(encoding="utf-8"))
-    return default
-
-
-def save_json(path: Path, data):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-
-def fetch_playlist_videos(youtube, playlist_id: str) -> list[dict]:
-    videos = []
-    next_page = None
-    while True:
-        resp = youtube.playlistItems().list(
-            part="snippet",
-            playlistId=playlist_id,
-            maxResults=50,
-            pageToken=next_page,
-        ).execute()
-        for item in resp.get("items", []):
-            snippet = item["snippet"]
-            video_id = snippet["resourceId"]["videoId"]
-            videos.append({
-                "video_id": video_id,
-                "title": snippet.get("title", ""),
-                "channel": snippet.get("videoOwnerChannelTitle", ""),
-                "published_at": snippet.get("publishedAt", ""),
-                "url": f"https://youtube.com/watch?v={video_id}",
-            })
-        next_page = resp.get("nextPageToken")
-        if not next_page:
-            break
-    return videos
-
-
-def main():
-    youtube = build("youtube", "v3", developerKey=API_KEY)
-
-    processed = set(load_json(PROCESSED_FILE, []))
-    queue = load_json(QUEUE_FILE, [])
-    queued_ids = {v["video_id"] for v in queue}
-
-    all_videos = fetch_playlist_videos(youtube, PLAYLIST_ID)
-    print(f"Playlist contains {len(all_videos)} videos")
-
-    new_videos = [
-        v for v in all_videos
-        if v["video_id"] not in processed and v["video_id"] not in queued_ids
-    ]
-
-    if new_videos:
-        queue.extend(new_videos)
-        save_json(QUEUE_FILE, queue)
-        print(f"Added {len(new_videos)} new videos to queue:")
-        for v in new_videos:
-            print(f"  - {v['title']} ({v['video_id']})")
-    else:
-        print("No new videos found.")
-
-
-if __name__ == "__main__":
-    main()
+name: 🧠 AIVOS Brain Feed
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+jobs:
+  brain-feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: 🐍 Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: 📦 Závislosti check_playlist
+        run: pip install google-api-python-client==2.115.0
+      - name: 📡 Stage 1 – detekce nových videí
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+          YT_PLAYLIST_ID: ${{ secrets.YT_PLAYLIST_ID }}
+        run: python brain/check_playlist.py
+      - name: 📦 Závislosti process_queue
+        run: pip install --no-cache-dir yt-dlp google-generativeai edge-tts
+      - name: 🧠 Stage 2 – triage + sumarizace + brief
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_FEED_DB_ID: ${{ secrets.NOTION_FEED_DB_ID }}
+        run: python brain/process_queue.py
+      - name: 💾 Commit do yt-brain
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add -A
+          git diff --staged --quiet || git commit -m "🧠 Brain Feed $(date +%Y-%m-%d) [skip ci]"
+          git pull --rebase origin main
+          git push
+      - name: 📤 Push briefs do AIVOS
+        env:
+          AIVOS_TOKEN: ${{ secrets.AIVOS_GITHUB_TOKEN }}
+        run: |
+          git clone https://x-access-token:$AIVOS_TOKEN@github.com/IvanekLumberjack888/AIVOS.git /tmp/aivos
+          mkdir -p /tmp/aivos/public/briefs
+          cp -r public/briefs/. /tmp/aivos/public/briefs/
+          cd /tmp/aivos
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add public/briefs/
+          git diff --staged --quiet || git commit -m "🧠 Brief $(date +%Y-%m-%d) [skip ci]"
+          git push
