@@ -40,9 +40,12 @@ BRIEFS_DIR      = ROOT / "public" / "briefs"
 GEMINI_MODEL    = "gemini-2.0-flash"
 MAX_TRANSCRIPT  = 10000
 TTS_VOICE       = "cs-CZ-AntoninNeural"
-RATE_LIMIT_SLEEP   = 8
-MAX_VIDEOS_PER_RUN = 10
+RATE_LIMIT_SLEEP   = 4
+MAX_VIDEOS_PER_RUN = 5
 GMAIL_TIMEOUT      = 30
+# Tvrdý časový strop pro zpracování videí (sekundy). Pod GitHub limitem 50 min.
+# Když se překročí, zbytek videí zůstane v queue na příští run (nic se neztratí).
+PROCESSING_BUDGET  = 35 * 60
 
 TRIAGE_PROMPT = """Jsi osobní knowledge kurátor pro Iva – Junior Data Engineera (Konica Minolta, Azure stack).
 Ivo má neurodivergentní profil (ADHD-PI, INTJ). Chce growth v IT + AI + osobním životě.
@@ -507,7 +510,15 @@ def main():
         return
 
     results = []
+    run_start = time.monotonic()
+    stopped_early = False
     for i, video in enumerate(new_videos, 1):
+        # Časový strop: když došel budget, ukonči gracefully a ulož co máš
+        if time.monotonic() - run_start > PROCESSING_BUDGET:
+            print(f"  ⏱️  Časový budget ({PROCESSING_BUDGET//60} min) vyčerpán – "
+                  f"zbylá videa zůstanou v queue na příští run.")
+            stopped_early = True
+            break
         print(f"[{i}/{len(new_videos)}] {video['title'][:65]}")
         transcript, source = get_transcript(video)
         print(f"  📄 Transkript: {source} ({len(transcript)} znaků)")
@@ -524,16 +535,21 @@ def main():
     save_json(PROCESSED_FILE, list(processed))
     save_json(QUEUE_FILE, [v for v in queue if v["video_id"] not in processed])
 
-    # ── Newsletter processing: Medium/HN/Dev.to digesty → triage ──
+    # Přepočítej kolik videí reálně zbývá (po případném early stopu)
+    still_queued = len([v for v in queue if v["video_id"] not in processed])
+
+    # ── Newsletter processing: jen pokud zbývá čas ──
     newsletter_results = []
-    if _NEWSLETTER_AVAILABLE:
+    budget_left = PROCESSING_BUDGET - (time.monotonic() - run_start)
+    if _NEWSLETTER_AVAILABLE and not stopped_early and budget_left > 300:
         print("\n📰 Zpracovávám newslettery...")
         try:
             newsletter_results = _newsletter.process_newsletters(model)
         except Exception as e:
             print(f"  ⚠️ Newsletter processing selhalo: {e}")
+    elif stopped_early:
+        print("\n📰 Newslettery přeskočeny (časový budget) – zpracují se příští run.")
 
-    # Spoj videa + newsletter články pro brief i Notion
     all_results = results + newsletter_results
 
     print("\n🎙️ Generuji podcast skript...")
@@ -563,8 +579,8 @@ def main():
     m = sum(1 for r in all_results if "🟡" in r["triage"])
     l = sum(1 for r in all_results if "🔴" in r["triage"])
     print(f"\n📊 🟢 {h} | 🟡 {m} | 🔴 {l}")
-    if remaining > 0:
-        print(f"  ℹ️  {remaining} videí čeká na zpracování zítra")
+    if still_queued > 0:
+        print(f"  ℹ️  {still_queued} videí čeká v queue na další run (cron zítra, nebo spusť ručně)")
     print("🏁 Hotovo.\n")
 
 if __name__ == "__main__":
