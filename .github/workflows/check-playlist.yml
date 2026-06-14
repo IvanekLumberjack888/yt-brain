@@ -33,6 +33,8 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_FEED_DB_ID: ${{ secrets.NOTION_FEED_DB_ID }}
         run: python brain/process_queue.py
       - name: 💾 Commit do yt-brain
         run: |
