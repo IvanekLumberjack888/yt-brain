@@ -4,6 +4,7 @@ Triage + podcast script + edge-tts .mp3
 Max 15 videí per run, sleep 4s mezi Gemini calls.
 Gmail s 30s timeoutem.
 """
+import sys; print("START", flush=True); sys.stdout.flush()
 import os, json, re, glob, subprocess, tempfile, sys, asyncio, time, signal, socket
 from datetime import date
 from pathlib import Path
