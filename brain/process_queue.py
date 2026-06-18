@@ -1,34 +1,16 @@
 """
 brain/process_queue.py – AIVOS Brain Feed (Stage 2)
 Triage + podcast script + edge-tts .mp3
-Max 10 videí per run, sleep 8s mezi Gemini calls.
+Max 15 videí per run, sleep 4s mezi Gemini calls.
 Gmail s 30s timeoutem.
 """
-import os, json, re, glob, subprocess, tempfile, sys, asyncio, time, signal
+import os, json, re, glob, subprocess, tempfile, sys, asyncio, time, signal, socket
 from datetime import date
 from pathlib import Path
 import warnings
 warnings.filterwarnings("ignore")
 import google.generativeai as genai
 import edge_tts
-
-try:
-    import gmail_brief as _gmail
-    _GMAIL_AVAILABLE = True
-except ImportError:
-    _GMAIL_AVAILABLE = False
-
-try:
-    import notion_sync as _notion
-    _NOTION_AVAILABLE = True
-except ImportError:
-    _NOTION_AVAILABLE = False
-
-try:
-    import newsletter_brief as _newsletter
-    _NEWSLETTER_AVAILABLE = True
-except ImportError:
-    _NEWSLETTER_AVAILABLE = False
 
 ROOT            = Path(__file__).parent.parent
 DATA_DIR        = ROOT / "data"
@@ -37,15 +19,13 @@ PROCESSED_FILE  = DATA_DIR / "processed_videos.json"
 SUMMARIES_DIR   = ROOT / "summaries"
 TRANSCRIPTS_DIR = ROOT / "transcripts" / "2026"
 BRIEFS_DIR      = ROOT / "public" / "briefs"
-GEMINI_MODEL    = "gemini-2.0-flash"
-MAX_TRANSCRIPT  = 10000
-TTS_VOICE       = "cs-CZ-AntoninNeural"
+GEMINI_MODEL       = "gemini-2.0-flash"
+MAX_TRANSCRIPT     = 10000
+TTS_VOICE          = "cs-CZ-AntoninNeural"
 RATE_LIMIT_SLEEP   = 4
-MAX_VIDEOS_PER_RUN = 5
-GMAIL_TIMEOUT      = 30
-# Tvrdý časový strop pro zpracování videí (sekundy). Pod GitHub limitem 50 min.
-# Když se překročí, zbytek videí zůstane v queue na příští run (nic se neztratí).
-PROCESSING_BUDGET  = 35 * 60
+MAX_VIDEOS_PER_RUN = 15
+GMAIL_TIMEOUT      = 20
+PROCESSING_BUDGET  = 35 * 60  # 35 minut
 
 TRIAGE_PROMPT = """Jsi osobní knowledge kurátor pro Iva – Junior Data Engineera (Konica Minolta, Azure stack).
 Ivo má neurodivergentní profil (ADHD-PI, INTJ). Chce growth v IT + AI + osobním životě.
@@ -263,32 +243,19 @@ def triage_video(video: dict, transcript: str, model) -> dict:
         result["triage"] = "🟢 HIGH"
         print(f"  ⚡ Keyword boost → 🟢 HIGH (9/10)")
 
-    # ── BUGFIX: HIGH/MEDIUM nikdy nesmí mít prázdné summary ──
-    # Pokud Gemini nevrátilo summary (selhání / krátký transkript / keyword boost
-    # bez obsahu), vygeneruj aspoň fallback z názvu, ať brief není prázdný.
     if "🔴" not in result["triage"] and not result["summary"].strip():
         if transcript and len(transcript) > 200:
-            result["summary"] = _fallback_summary(video, transcript, model)
+            try:
+                p = (f"Shrň ve 2 větách česky o čem je toto video pro Data Engineera. "
+                     f"Název: {video['title']}. Kanál: {video['channel']}. "
+                     f"Transkript: {transcript[:3000]}")
+                result["summary"] = gemini_with_retry(model, p, max_retries=2).strip()[:400]
+            except Exception:
+                result["summary"] = f"Video „{video['title']}" od {video['channel']}. Otevři pro detail."
         else:
-            result["summary"] = (
-                f"Video „{video['title']}“ od {video['channel']}. "
-                f"Transkript nebyl dostupný – ohodnoceno podle názvu a kanálu. "
-                f"Otevři pro detail."
-            )
+            result["summary"] = (f"Video „{video['title']}" od {video['channel']}. "
+                                  f"Transkript nebyl dostupný – ohodnoceno podle názvu.")
     return result
-
-
-def _fallback_summary(video: dict, transcript: str, model) -> str:
-    """Když hlavní triage nevrátí summary, zkus minimální samostatný call."""
-    try:
-        prompt = (
-            f"Shrň ve 2 větách česky o čem je toto video pro Data Engineera. "
-            f"Název: {video['title']}. Kanál: {video['channel']}. "
-            f"Transkript (úryvek): {transcript[:3000]}"
-        )
-        return gemini_with_retry(model, prompt, max_retries=2).strip()[:400]
-    except Exception:
-        return f"Video „{video['title']}“ od {video['channel']}. Otevři pro detail."
 
 def _parse_triage(text: str) -> dict:
     r = {"score": 1, "triage": "🔴 LOW", "category": "AI",
@@ -349,8 +316,7 @@ def _fmt_action(action: str) -> str:
         return ""
     return action.strip()
 
-def generate_podcast_script(results: list, today: str, model,
-                             gmail_section: str = "") -> str:
+def generate_podcast_script(results: list, today: str, model, gmail_section: str = "") -> str:
     high   = [v for v in results if "🟢" in v["triage"]]
     medium = [v for v in results if "🟡" in v["triage"]]
     low_n  = sum(1 for v in results if "🔴" in v["triage"])
@@ -363,8 +329,7 @@ def generate_podcast_script(results: list, today: str, model,
             summary = v.get("summary") or f"Video o tématu {v['title']} od {v['channel']}."
             kp      = [p for p in v.get("key_points", []) if p]
             action  = _fmt_action(v.get("action", ""))
-            cat     = v.get("category", "")
-            brief_data += f"\nVideo: {v['title']}\nYouTuber: {v['channel']}\nKategorie: {cat}\nSkóre: {v.get('score','?')}/10\nShrnutí: {summary}\n"
+            brief_data += f"\nVideo: {v['title']}\nYouTuber: {v['channel']}\nSkóre: {v.get('score','?')}/10\nShrnutí: {summary}\n"
             if kp:
                 brief_data += f"Klíčové body: {', '.join(kp)}\n"
             if action:
@@ -395,11 +360,9 @@ def generate_podcast_script(results: list, today: str, model,
         if gmail_section:
             lines.append(gmail_section)
         for v in high:
-            summary = v.get("summary") or f"Video o {v['title']}."
-            lines.append(f"Video {v['title']} od {v['channel']}. {summary}")
+            lines.append(f"Video {v['title']} od {v['channel']}. {v.get('summary','')}")
         for v in medium[:3]:
-            summary = v.get("summary") or f"Video o {v['title']}."
-            lines.append(f"Také {v['title']}. {summary}")
+            lines.append(f"Také {v['title']}. {v.get('summary','')}")
         lines.append("To je vše pro dnešní ráno. Hodně štěstí!")
         return " ".join(lines)
 
@@ -431,13 +394,10 @@ def save_brief(results: list, today: str, podcast_script: str, gmail_section: st
         "date":          today,
         "text":          podcast_script,
         "gmail_section": gmail_section,
-        "stats": {
-            "high": len(high), "medium": len(medium),
-            "low": low_n, "total": len(results)
-        },
-        "high":      high,
-        "medium":    medium,
-        "has_audio": True,
+        "stats": {"high": len(high), "medium": len(medium), "low": low_n, "total": len(results)},
+        "high":          high,
+        "medium":        medium,
+        "has_audio":     True,
     }
 
     (BRIEFS_DIR / f"{today}.json").write_text(
@@ -453,25 +413,27 @@ def save_brief(results: list, today: str, podcast_script: str, gmail_section: st
     print("📄 Brief JSON uložen.")
 
 def get_gmail_section(model) -> str:
-    """Načte Gmail sekci s timeoutem. Vrátí prázdný string při chybě."""
-    if not _GMAIL_AVAILABLE:
+    try:
+        import gmail_brief as _gmail
+    except ImportError:
         return ""
+
     print("📬 Načítám Gmail...")
     try:
+        socket.setdefaulttimeout(GMAIL_TIMEOUT)
+
         def _timeout_handler(signum, frame):
-            raise TimeoutError("Gmail timeout po 30s")
+            raise TimeoutError("Gmail timeout")
         signal.signal(signal.SIGALRM, _timeout_handler)
         signal.alarm(GMAIL_TIMEOUT)
         result = _gmail.generate_gmail_section(model)
         signal.alarm(0)
+        socket.setdefaulttimeout(None)
         return result
-    except TimeoutError as e:
-        print(f"  ⚠️ {e} – přeskakuji Gmail")
-        signal.alarm(0)
-        return ""
     except Exception as e:
-        print(f"  ⚠️ Gmail error: {e} – přeskakuji")
+        print(f"  ⚠️ Gmail přeskočen: {e}")
         signal.alarm(0)
+        socket.setdefaulttimeout(None)
         return ""
 
 def main():
@@ -499,11 +461,9 @@ def main():
 
     if not new_videos:
         print("✅ Nic nového v queue.")
-        if gmail_section:
-            script = (f"Dobré ráno Ivo! Dnes {today} žádná nová videa v AIVOS Queue. "
-                      f"Ale mám pro tebe přehled emailů. {gmail_section} Hodně štěstí v práci!")
-        else:
-            script = f"Dobré ráno Ivo! Dnes {today} žádná nová videa v AIVOS Queue. Hodně štěstí v práci!"
+        script = (f"Dobré ráno Ivo! Dnes {today} žádná nová videa v AIVOS Queue. "
+                  f"{gmail_section} Hodně štěstí v práci!" if gmail_section
+                  else f"Dobré ráno Ivo! Dnes {today} žádná nová videa v AIVOS Queue. Hodně štěstí v práci!")
         save_brief([], today, script, gmail_section)
         asyncio.run(text_to_mp3(script, str(BRIEFS_DIR / "latest_brief.mp3")))
         asyncio.run(text_to_mp3(script, str(BRIEFS_DIR / f"{today}_brief.mp3")))
@@ -511,13 +471,9 @@ def main():
 
     results = []
     run_start = time.monotonic()
-    stopped_early = False
     for i, video in enumerate(new_videos, 1):
-        # Časový strop: když došel budget, ukonči gracefully a ulož co máš
         if time.monotonic() - run_start > PROCESSING_BUDGET:
-            print(f"  ⏱️  Časový budget ({PROCESSING_BUDGET//60} min) vyčerpán – "
-                  f"zbylá videa zůstanou v queue na příští run.")
-            stopped_early = True
+            print(f"  ⏱️  Budget {PROCESSING_BUDGET//60} min vyčerpán – zbytek zůstává v queue.")
             break
         print(f"[{i}/{len(new_videos)}] {video['title'][:65]}")
         transcript, source = get_transcript(video)
@@ -535,52 +491,24 @@ def main():
     save_json(PROCESSED_FILE, list(processed))
     save_json(QUEUE_FILE, [v for v in queue if v["video_id"] not in processed])
 
-    # Přepočítej kolik videí reálně zbývá (po případném early stopu)
-    still_queued = len([v for v in queue if v["video_id"] not in processed])
-
-    # ── Newsletter processing: jen pokud zbývá čas ──
-    newsletter_results = []
-    budget_left = PROCESSING_BUDGET - (time.monotonic() - run_start)
-    if _NEWSLETTER_AVAILABLE and not stopped_early and budget_left > 300:
-        print("\n📰 Zpracovávám newslettery...")
-        try:
-            newsletter_results = _newsletter.process_newsletters(model)
-        except Exception as e:
-            print(f"  ⚠️ Newsletter processing selhalo: {e}")
-    elif stopped_early:
-        print("\n📰 Newslettery přeskočeny (časový budget) – zpracují se příští run.")
-
-    all_results = results + newsletter_results
-
     print("\n🎙️ Generuji podcast skript...")
-    podcast_script = generate_podcast_script(all_results, today, model, gmail_section)
+    podcast_script = generate_podcast_script(results, today, model, gmail_section)
     print(f"  Délka skriptu: {len(podcast_script)} znaků (~{len(podcast_script)//15} sekund)")
 
     print("🔊 Převádím na audio...")
-    mp3_path  = str(BRIEFS_DIR / "latest_brief.mp3")
-    dated_mp3 = str(BRIEFS_DIR / f"{today}_brief.mp3")
-    asyncio.run(text_to_mp3(podcast_script, mp3_path))
-    asyncio.run(text_to_mp3(podcast_script, dated_mp3))
-    print(f"  ✅ Audio: {mp3_path}")
+    asyncio.run(text_to_mp3(podcast_script, str(BRIEFS_DIR / "latest_brief.mp3")))
+    asyncio.run(text_to_mp3(podcast_script, str(BRIEFS_DIR / f"{today}_brief.mp3")))
+    print(f"  ✅ Audio uloženo")
 
-    save_brief(all_results, today, podcast_script, gmail_section)
+    save_brief(results, today, podcast_script, gmail_section)
 
-    # ── Notion sync: HIGH/MEDIUM → 00 FEED (druhý mozek persistence) ──
-    if _NOTION_AVAILABLE:
-        print("\n🗄️  Ukládám do Notion 00 FEED...")
-        try:
-            _notion.sync_to_notion(results, today, source_type="YouTube")
-            if newsletter_results:
-                _notion.sync_to_notion(newsletter_results, today, source_type="Newsletter")
-        except Exception as e:
-            print(f"  ⚠️ Notion sync selhalo: {e}")
-
-    h = sum(1 for r in all_results if "🟢" in r["triage"])
-    m = sum(1 for r in all_results if "🟡" in r["triage"])
-    l = sum(1 for r in all_results if "🔴" in r["triage"])
+    h = sum(1 for r in results if "🟢" in r["triage"])
+    m = sum(1 for r in results if "🟡" in r["triage"])
+    l = sum(1 for r in results if "🔴" in r["triage"])
+    still_queued = len([v for v in queue if v["video_id"] not in processed])
     print(f"\n📊 🟢 {h} | 🟡 {m} | 🔴 {l}")
     if still_queued > 0:
-        print(f"  ℹ️  {still_queued} videí čeká v queue na další run (cron zítra, nebo spusť ručně)")
+        print(f"  ℹ️  {still_queued} videí čeká na další run")
     print("🏁 Hotovo.\n")
 
 if __name__ == "__main__":
