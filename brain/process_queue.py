@@ -251,10 +251,10 @@ def triage_video(video: dict, transcript: str, model) -> dict:
                      f"Transkript: {transcript[:3000]}")
                 result["summary"] = gemini_with_retry(model, p, max_retries=2).strip()[:400]
             except Exception:
-                result["summary"] = f"Video „{video['title']}" od {video['channel']}. Otevři pro detail."
+                result["summary"] = f"Video '{video['title']}' od {video['channel']}. Otevri pro detail."
         else:
-            result["summary"] = (f"Video „{video['title']}" od {video['channel']}. "
-                                  f"Transkript nebyl dostupný – ohodnoceno podle názvu.")
+            result["summary"] = (f"Video '{video['title']}' od {video['channel']}. "
+                                  f"Transkript nebyl dostupny - ohodnoceno podle nazvu.")
     return result
 
 def _parse_triage(text: str) -> dict:
