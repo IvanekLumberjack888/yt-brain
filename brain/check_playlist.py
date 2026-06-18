@@ -1,59 +1,101 @@
-name: 🧠 AIVOS Brain Feed
-on:
-  schedule:
-    - cron: '0 6 * * *'
-  workflow_dispatch:
-jobs:
-  brain-feed:
-    runs-on: ubuntu-latest
-    timeout-minutes: 50
-    permissions:
-      contents: write
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: 🐍 Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-      - name: 📦 Závislosti check_playlist
-        run: pip install google-api-python-client==2.115.0
-      - name: 📡 Stage 1 – detekce nových videí
-        env:
-          YT_API_KEY: ${{ secrets.YT_API_KEY }}
-          YT_PLAYLIST_ID: ${{ secrets.YT_PLAYLIST_ID }}
-        run: python brain/check_playlist.py
-      - name: 📦 Závislosti process_queue
-        run: pip install --no-cache-dir yt-dlp google-generativeai edge-tts
-      - name: 🧠 Stage 2 – triage + sumarizace + brief
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_FEED_DB_ID: ${{ secrets.NOTION_FEED_DB_ID }}
-        run: python brain/process_queue.py
-      - name: 💾 Commit do yt-brain
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add -A
-          git diff --staged --quiet || git commit -m "🧠 Brain Feed $(date +%Y-%m-%d) [skip ci]"
-          git pull --rebase origin main
-          git push
-      - name: 📤 Push briefs do AIVOS
-        env:
-          AIVOS_TOKEN: ${{ secrets.AIVOS_GITHUB_TOKEN }}
-        run: |
-          git clone https://x-access-token:$AIVOS_TOKEN@github.com/IvanekLumberjack888/AIVOS.git /tmp/aivos
-          mkdir -p /tmp/aivos/public/briefs
-          cp -r public/briefs/. /tmp/aivos/public/briefs/
-          cd /tmp/aivos
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git add public/briefs/
-          git diff --staged --quiet || git commit -m "🧠 Brief $(date +%Y-%m-%d) [skip ci]"
-          git push
+"""
+brain/check_playlist.py – AIVOS Brain Feed (Stage 1)
+Detekuje nová videa v YouTube playlistu a přidá je do queue.json
+"""
+import os, json, sys
+from pathlib import Path
+from googleapiclient.discovery import build
+
+ROOT       = Path(__file__).parent.parent
+DATA_DIR   = ROOT / "data"
+QUEUE_FILE = DATA_DIR / "queue.json"
+PROCESSED_FILE = DATA_DIR / "processed_videos.json"
+
+YT_API_KEY    = os.environ.get("YT_API_KEY", "")
+YT_PLAYLIST_ID = os.environ.get("YT_PLAYLIST_ID", "")
+MAX_RESULTS   = 50
+
+
+def load_json(path: Path, default):
+    if path.exists():
+        return json.loads(path.read_text(encoding="utf-8"))
+    return default
+
+
+def save_json(path: Path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def fetch_playlist_videos(api_key: str, playlist_id: str) -> list[dict]:
+    youtube = build("youtube", "v3", developerKey=api_key)
+    videos = []
+    next_page = None
+
+    while True:
+        req = youtube.playlistItems().list(
+            part="snippet",
+            playlistId=playlist_id,
+            maxResults=50,
+            pageToken=next_page,
+        )
+        res = req.execute()
+
+        for item in res.get("items", []):
+            snippet = item["snippet"]
+            video_id = snippet.get("resourceId", {}).get("videoId", "")
+            if not video_id:
+                continue
+            videos.append({
+                "video_id": video_id,
+                "title":    snippet.get("title", ""),
+                "channel":  snippet.get("videoOwnerChannelTitle", ""),
+                "url":      f"https://youtube.com/watch?v={video_id}",
+                "published": snippet.get("publishedAt", ""),
+            })
+
+        next_page = res.get("nextPageToken")
+        if not next_page or len(videos) >= MAX_RESULTS:
+            break
+
+    return videos
+
+
+def main():
+    print(f"\n📡 AIVOS check_playlist\n")
+
+    if not YT_API_KEY:
+        print("❌ YT_API_KEY není nastaven.")
+        sys.exit(1)
+    if not YT_PLAYLIST_ID:
+        print("❌ YT_PLAYLIST_ID není nastaven.")
+        sys.exit(1)
+
+    processed = set(load_json(PROCESSED_FILE, []))
+    existing_queue = load_json(QUEUE_FILE, [])
+    existing_ids = {v["video_id"] for v in existing_queue}
+
+    print(f"🔍 Fetchuji playlist {YT_PLAYLIST_ID}...")
+    videos = fetch_playlist_videos(YT_API_KEY, YT_PLAYLIST_ID)
+    print(f"  Nalezeno {len(videos)} videí v playlistu")
+
+    new_videos = [
+        v for v in videos
+        if v["video_id"] not in processed and v["video_id"] not in existing_ids
+    ]
+    print(f"  Nových (nezpracovaných): {len(new_videos)}")
+
+    if new_videos:
+        updated_queue = existing_queue + new_videos
+        save_json(QUEUE_FILE, updated_queue)
+        print(f"✅ Queue aktualizována: {len(updated_queue)} videí celkem")
+        for v in new_videos:
+            print(f"  + {v['title'][:65]} [{v['channel']}]")
+    else:
+        print("✅ Žádná nová videa.")
+
+    print("🏁 Hotovo.\n")
+
+
+if __name__ == "__main__":
+    main()
