@@ -14,20 +14,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: 🐍 Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
+
       - name: 📦 Závislosti check_playlist
         run: pip install google-api-python-client==2.115.0
+
       - name: 📡 Stage 1 – detekce nových videí
         env:
           YT_API_KEY: ${{ secrets.YT_API_KEY }}
           YT_PLAYLIST_ID: ${{ secrets.YT_PLAYLIST_ID }}
         run: python brain/check_playlist.py
+
       - name: 📦 Závislosti process_queue
         run: pip install --no-cache-dir yt-dlp google-generativeai edge-tts
+
       - name: 🧠 Stage 2 – triage + sumarizace + brief
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -36,14 +41,17 @@ jobs:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_FEED_DB_ID: ${{ secrets.NOTION_FEED_DB_ID }}
         run: python brain/process_queue.py
+
       - name: 💾 Commit do yt-brain
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
+          git rm -r --cached brain/__pycache__/ 2>/dev/null || true
           git add -A
           git diff --staged --quiet || git commit -m "🧠 Brain Feed $(date +%Y-%m-%d) [skip ci]"
-          git pull --rebase origin main
+          git pull --rebase origin main || git rebase --abort
           git push
+
       - name: 📤 Push briefs do AIVOS
         env:
           AIVOS_TOKEN: ${{ secrets.AIVOS_GITHUB_TOKEN }}
