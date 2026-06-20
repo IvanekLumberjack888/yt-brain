@@ -1,19 +1,21 @@
 """
 brain/check_playlist.py – AIVOS Brain Feed (Stage 1)
 Detekuje nová videa v YouTube playlistu a přidá je do queue.json
+Používá přímý HTTP request místo google-api-python-client.
 """
 import os, json, sys
+import urllib.request
+import urllib.parse
 from pathlib import Path
-from googleapiclient.discovery import build
 
-ROOT       = Path(__file__).parent.parent
-DATA_DIR   = ROOT / "data"
-QUEUE_FILE = DATA_DIR / "queue.json"
+ROOT           = Path(__file__).parent.parent
+DATA_DIR       = ROOT / "data"
+QUEUE_FILE     = DATA_DIR / "queue.json"
 PROCESSED_FILE = DATA_DIR / "processed_videos.json"
 
-YT_API_KEY    = os.environ.get("YT_API_KEY", "")
+YT_API_KEY     = os.environ.get("YT_API_KEY", "")
 YT_PLAYLIST_ID = os.environ.get("YT_PLAYLIST_ID", "")
-MAX_RESULTS   = 50
+MAX_RESULTS    = 50
 
 
 def load_json(path: Path, default):
@@ -28,33 +30,45 @@ def save_json(path: Path, data):
 
 
 def fetch_playlist_videos(api_key: str, playlist_id: str) -> list[dict]:
-    youtube = build("youtube", "v3", developerKey=api_key)
     videos = []
     next_page = None
+    base_url = "https://www.googleapis.com/youtube/v3/playlistItems"
 
     while True:
-        req = youtube.playlistItems().list(
-            part="snippet",
-            playlistId=playlist_id,
-            maxResults=50,
-            pageToken=next_page,
-        )
-        res = req.execute()
+        params = {
+            "part": "snippet",
+            "playlistId": playlist_id,
+            "maxResults": 50,
+            "key": api_key,
+        }
+        if next_page:
+            params["pageToken"] = next_page
 
-        for item in res.get("items", []):
+        url = base_url + "?" + urllib.parse.urlencode(params)
+        try:
+            with urllib.request.urlopen(url, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            print(f"  ❌ YouTube API error: {e}")
+            sys.exit(1)
+
+        for item in data.get("items", []):
             snippet = item["snippet"]
             video_id = snippet.get("resourceId", {}).get("videoId", "")
             if not video_id:
                 continue
+            title = snippet.get("title", "")
+            if title in ("Deleted video", "Private video"):
+                continue
             videos.append({
                 "video_id": video_id,
-                "title":    snippet.get("title", ""),
+                "title":    title,
                 "channel":  snippet.get("videoOwnerChannelTitle", ""),
                 "url":      f"https://youtube.com/watch?v={video_id}",
                 "published": snippet.get("publishedAt", ""),
             })
 
-        next_page = res.get("nextPageToken")
+        next_page = data.get("nextPageToken")
         if not next_page or len(videos) >= MAX_RESULTS:
             break
 
