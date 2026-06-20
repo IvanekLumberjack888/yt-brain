@@ -31,15 +31,11 @@ jobs:
         run: python brain/check_playlist.py
 
       - name: 📦 Závislosti process_queue
-        run: pip install --no-cache-dir yt-dlp google-generativeai edge-tts
+        run: pip install --no-cache-dir yt-dlp anthropic edge-tts
 
       - name: 🧠 Stage 2 – triage + sumarizace + brief
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_FEED_DB_ID: ${{ secrets.NOTION_FEED_DB_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python brain/process_queue.py
 
       - name: 💾 Commit do yt-brain

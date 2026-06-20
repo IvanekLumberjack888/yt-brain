@@ -1,9 +1,10 @@
 """
 brain/process_queue.py – AIVOS Brain Feed (Stage 2)
 Triage + podcast script + edge-tts .mp3
-Max 8 videí per run, sleep 30s mezi Gemini calls.
+Používá Claude Haiku (Anthropic API) místo Gemini.
+Max 15 videí per run, sleep 2s mezi voláními.
 """
-print("[DEBUG] process_queue.py start", flush=True)
+print("[START] process_queue.py", flush=True)
 
 import os, json, re, glob, subprocess, tempfile, sys, asyncio, time
 from datetime import date
@@ -11,12 +12,10 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings("ignore")
 
-print("[DEBUG] stdlib imported", flush=True)
-
-import google.generativeai as genai
+import anthropic
 import edge_tts
 
-print("[DEBUG] genai + edge_tts imported", flush=True)
+print("[OK] imports done", flush=True)
 
 ROOT            = Path(__file__).parent.parent
 DATA_DIR        = ROOT / "data"
@@ -25,12 +24,13 @@ PROCESSED_FILE  = DATA_DIR / "processed_videos.json"
 SUMMARIES_DIR   = ROOT / "summaries"
 TRANSCRIPTS_DIR = ROOT / "transcripts" / "2026"
 BRIEFS_DIR      = ROOT / "public" / "briefs"
-GEMINI_MODEL       = "gemini-2.0-flash"
+
+CLAUDE_MODEL       = "claude-haiku-4-5-20251001"
 MAX_TRANSCRIPT     = 10000
 TTS_VOICE          = "cs-CZ-AntoninNeural"
-RATE_LIMIT_SLEEP   = 30   # 30s mezi videi – Gemini free tier limit
-MAX_VIDEOS_PER_RUN = 8    # 8 videí × ~90s = ~12 min, bezpečně pod 30min timeout
-PROCESSING_BUDGET  = 25 * 60  # 25 minut hard stop
+RATE_LIMIT_SLEEP   = 2     # Claude API nemá přísný RPM limit
+MAX_VIDEOS_PER_RUN = 15
+PROCESSING_BUDGET  = 25 * 60
 
 TRIAGE_PROMPT = """Jsi osobní knowledge kurátor pro Iva – Junior Data Engineera (Konica Minolta, Azure stack).
 Ivo má neurodivergentní profil (ADHD-PI, INTJ). Chce growth v IT + AI + osobním životě.
@@ -95,7 +95,7 @@ Struktura:
 4. Závěr: shrnutí, jeden konkrétní tip na odpolední deep dive, rozloučení
 
 Tón: jako přítel-kolega tech guy, ne robot. Říkej "ty" ne "vy".
-NEPOUZIVAEJ markdown, hvězdičky ani formátování – jen čistý text pro TTS.
+Nepoužívej markdown ani formátování – jen čistý text pro TTS.
 
 YouTube data:
 {brief_data}"""
@@ -203,22 +203,28 @@ def keyword_boost(title: str, channel: str) -> int | None:
     return None
 
 
-def gemini_with_retry(model, prompt: str, max_retries: int = 3) -> str:
+def claude_call(client: anthropic.Anthropic, prompt: str, max_retries: int = 3) -> str:
+    """Volá Claude Haiku s retry logikou."""
     for attempt in range(max_retries):
         try:
-            return model.generate_content(prompt).text.strip()
+            msg = client.messages.create(
+                model=CLAUDE_MODEL,
+                max_tokens=1024,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return msg.content[0].text.strip()
         except Exception as e:
             err = str(e)
-            if "429" in err or "quota" in err.lower() or "rate" in err.lower():
-                wait = 30 * (attempt + 1)  # 30 / 60 / 90s
+            if "429" in err or "overloaded" in err.lower() or "rate" in err.lower():
+                wait = 30 * (attempt + 1)
                 print(f"  ⏳ Rate limit, čekám {wait}s (pokus {attempt+1}/{max_retries})...", flush=True)
                 time.sleep(wait)
             else:
                 raise
-    raise Exception(f"Gemini selhal po {max_retries} pokusech")
+    raise Exception(f"Claude API selhal po {max_retries} pokusech")
 
 
-def triage_video(video: dict, transcript: str, model) -> dict:
+def triage_video(video: dict, transcript: str, client: anthropic.Anthropic) -> dict:
     forced_score = keyword_boost(video["title"], video["channel"])
     prompt = TRIAGE_PROMPT.format(
         title=video["title"],
@@ -226,9 +232,9 @@ def triage_video(video: dict, transcript: str, model) -> dict:
         transcript=transcript or "(transkript nedostupny – hodnoť jen z nazvu a kanalu)"
     )
     try:
-        text = gemini_with_retry(model, prompt)
+        text = claude_call(client, prompt)
     except Exception as e:
-        print(f"  ⚠️ Gemini error: {e}", flush=True)
+        print(f"  ⚠️ Claude error: {e}", flush=True)
         result = {"score": 5, "triage": "🟡 MEDIUM", "category": "AI",
                   "summary": "", "key_points": [], "action": "N/A", "tags": ""}
         if forced_score:
@@ -248,9 +254,9 @@ def triage_video(video: dict, transcript: str, model) -> dict:
                 p = (f"Shrn ve 2 vetach cesky o cem je toto video pro Data Engineera. "
                      f"Nazev: {video['title']}. Kanal: {video['channel']}. "
                      f"Transkript: {transcript[:3000]}")
-                result["summary"] = gemini_with_retry(model, p, max_retries=2).strip()[:400]
+                result["summary"] = claude_call(client, p).strip()[:400]
             except Exception:
-                result["summary"] = f"Video '{video['title']}' od {video['channel']}. Otevri pro detail."
+                result["summary"] = f"Video '{video['title']}' od {video['channel']}."
         else:
             result["summary"] = f"Video '{video['title']}' od {video['channel']}. Transkript nedostupny."
     return result
@@ -318,7 +324,7 @@ def _fmt_action(action: str) -> str:
     return action.strip()
 
 
-def generate_podcast_script(results: list, today: str, model) -> str:
+def generate_podcast_script(results: list, today: str, client: anthropic.Anthropic) -> str:
     high   = [v for v in results if "🟢" in v["triage"]]
     medium = [v for v in results if "🟡" in v["triage"]]
     low_n  = sum(1 for v in results if "🔴" in v["triage"])
@@ -329,8 +335,8 @@ def generate_podcast_script(results: list, today: str, model) -> str:
         brief_data += "=== HIGH RELEVANCE VIDEA ===\n"
         for v in high:
             summary = v.get("summary") or f"Video o tematu {v['title']} od {v['channel']}."
-            kp      = [p for p in v.get("key_points", []) if p]
-            action  = _fmt_action(v.get("action", ""))
+            kp = [p for p in v.get("key_points", []) if p]
+            action = _fmt_action(v.get("action", ""))
             brief_data += f"\nVideo: {v['title']}\nYouTuber: {v['channel']}\nSkore: {v.get('score','?')}/10\nShrnutí: {summary}\n"
             if kp:
                 brief_data += f"Klíčové body: {', '.join(kp)}\n"
@@ -344,13 +350,12 @@ def generate_podcast_script(results: list, today: str, model) -> str:
             brief_data += f"\nVideo: {v['title']}\nYouTuber: {v['channel']}\nShrnutí: {summary}\n"
 
     if not high and not medium:
-        return (f"Dobre rano Ivo! Dnes {today} zadna nova relevantni videa v queue. "
-                f"Pridej neco do AIVOS Queue playlistu a zitra si to poslechneme. Hodne stesti v praci!")
+        return (f"Dobre rano Ivo! Dnes {today} zadna nova relevantni videa. "
+                f"Pridej neco do AIVOS Queue playlistu. Hodne stesti!")
 
     prompt = PODCAST_PROMPT.format(brief_data=brief_data)
     try:
-        script = gemini_with_retry(model, prompt)
-        return script.strip()
+        return claude_call(client, prompt).strip()
     except Exception as e:
         print(f"  Podcast script error: {e}", flush=True)
         lines = [f"Dobre rano Ivo! Dnes {today} mam pro tebe {len(high)} dulezitych a {len(medium)} zajimavych videí."]
@@ -358,7 +363,7 @@ def generate_podcast_script(results: list, today: str, model) -> str:
             lines.append(f"Video {v['title']} od {v['channel']}. {v.get('summary','')}")
         for v in medium[:3]:
             lines.append(f"Take {v['title']}. {v.get('summary','')}")
-        lines.append("To je vse pro dnesni rano. Hodne stesti!")
+        lines.append("To je vse. Hodne stesti!")
         return " ".join(lines)
 
 
@@ -413,13 +418,13 @@ def main():
     today = date.today().isoformat()
     print(f"\n🧠 AIVOS process_queue | {today}\n", flush=True)
 
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
-        print("❌ GEMINI_API_KEY neni nastaven.", flush=True)
+        print("❌ ANTHROPIC_API_KEY neni nastaven.", flush=True)
         sys.exit(1)
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(GEMINI_MODEL)
-    print("[DEBUG] Gemini model ready", flush=True)
+
+    client = anthropic.Anthropic(api_key=api_key)
+    print("[OK] Claude Haiku client ready", flush=True)
 
     queue     = load_json(QUEUE_FILE, [])
     processed = set(load_json(PROCESSED_FILE, []))
@@ -429,7 +434,7 @@ def main():
 
     print(f"📥 Queue: {len(queue)} celkem | {len(all_new)} novych | zpracuji {len(new_videos)} (max {MAX_VIDEOS_PER_RUN}/run)", flush=True)
     if remaining > 0:
-        print(f"  ℹ️  {remaining} videí zbyvá na pristi run", flush=True)
+        print(f"  ℹ️  {remaining} videí zbylá na příští run", flush=True)
 
     if not new_videos:
         print("✅ Nic noveho v queue.", flush=True)
@@ -448,22 +453,21 @@ def main():
         print(f"[{i}/{len(new_videos)}] {video['title'][:65]}", flush=True)
         transcript, source = get_transcript(video)
         print(f"  📄 Transkript: {source} ({len(transcript)} znaku)", flush=True)
-        analysis = triage_video(video, transcript, model)
+        analysis = triage_video(video, transcript, client)
         print(f"  {analysis['triage']} ({analysis.get('score','?')}/10) [{analysis.get('category','')}]", flush=True)
         if "🔴" not in analysis["triage"]:
             save_summary(video, analysis, today, source)
         processed.add(video["video_id"])
         results.append({**video, **analysis})
         if i < len(new_videos):
-            print(f"  ⏳ Sleep {RATE_LIMIT_SLEEP}s...", flush=True)
             time.sleep(RATE_LIMIT_SLEEP)
 
     save_json(PROCESSED_FILE, list(processed))
     save_json(QUEUE_FILE, [v for v in queue if v["video_id"] not in processed])
 
     print("\n🎙️ Generuji podcast skript...", flush=True)
-    podcast_script = generate_podcast_script(results, today, model)
-    print(f"  Delka skriptu: {len(podcast_script)} znaku (~{len(podcast_script)//15} sekund)", flush=True)
+    podcast_script = generate_podcast_script(results, today, client)
+    print(f"  Delka: {len(podcast_script)} znaku (~{len(podcast_script)//15} sekund)", flush=True)
 
     print("🔊 Prevadam na audio...", flush=True)
     asyncio.run(text_to_mp3(podcast_script, str(BRIEFS_DIR / "latest_brief.mp3")))
