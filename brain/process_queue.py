@@ -1,7 +1,7 @@
 """
 brain/process_queue.py – AIVOS Brain Feed (Stage 2)
 Triage + podcast script + edge-tts .mp3
-Max 15 videí per run, sleep 4s mezi Gemini calls.
+Max 8 videí per run, sleep 30s mezi Gemini calls.
 """
 print("[DEBUG] process_queue.py start", flush=True)
 
@@ -28,9 +28,9 @@ BRIEFS_DIR      = ROOT / "public" / "briefs"
 GEMINI_MODEL       = "gemini-2.0-flash"
 MAX_TRANSCRIPT     = 10000
 TTS_VOICE          = "cs-CZ-AntoninNeural"
-RATE_LIMIT_SLEEP   = 4
-MAX_VIDEOS_PER_RUN = 15
-PROCESSING_BUDGET  = 35 * 60
+RATE_LIMIT_SLEEP   = 30   # 30s mezi videi – Gemini free tier limit
+MAX_VIDEOS_PER_RUN = 8    # 8 videí × ~90s = ~12 min, bezpečně pod 30min timeout
+PROCESSING_BUDGET  = 25 * 60  # 25 minut hard stop
 
 TRIAGE_PROMPT = """Jsi osobní knowledge kurátor pro Iva – Junior Data Engineera (Konica Minolta, Azure stack).
 Ivo má neurodivergentní profil (ADHD-PI, INTJ). Chce growth v IT + AI + osobním životě.
@@ -95,7 +95,7 @@ Struktura:
 4. Závěr: shrnutí, jeden konkrétní tip na odpolední deep dive, rozloučení
 
 Tón: jako přítel-kolega tech guy, ne robot. Říkej "ty" ne "vy".
-NEPOUZIVEJ markdown, hvězdičky ani formátování – jen čistý text pro TTS.
+NEPOUZIVAEJ markdown, hvězdičky ani formátování – jen čistý text pro TTS.
 
 YouTube data:
 {brief_data}"""
@@ -210,7 +210,7 @@ def gemini_with_retry(model, prompt: str, max_retries: int = 3) -> str:
         except Exception as e:
             err = str(e)
             if "429" in err or "quota" in err.lower() or "rate" in err.lower():
-                wait = 60 * (attempt + 1)
+                wait = 30 * (attempt + 1)  # 30 / 60 / 90s
                 print(f"  ⏳ Rate limit, čekám {wait}s (pokus {attempt+1}/{max_retries})...", flush=True)
                 time.sleep(wait)
             else:
@@ -303,10 +303,10 @@ type: youtube-summary
 ## Shrnutí
 {analysis['summary']}
 
-## Klícové body
+## Klíčové body
 {kp}
 
-## Akcní krok
+## Akční krok
 {analysis['action']}
 """
     filepath.write_text(content, encoding="utf-8")
@@ -333,7 +333,7 @@ def generate_podcast_script(results: list, today: str, model) -> str:
             action  = _fmt_action(v.get("action", ""))
             brief_data += f"\nVideo: {v['title']}\nYouTuber: {v['channel']}\nSkore: {v.get('score','?')}/10\nShrnutí: {summary}\n"
             if kp:
-                brief_data += f"Klícové body: {', '.join(kp)}\n"
+                brief_data += f"Klíčové body: {', '.join(kp)}\n"
             if action:
                 brief_data += f"Co vyzkousit: {action}\n"
 
