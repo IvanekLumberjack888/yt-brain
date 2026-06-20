@@ -32,7 +32,7 @@ jobs:
 
       - name: 📡 Stage 1 – detekce nových videí
         env:
-          YT_API_KEY: ${{ secrets.YOUTUBE_API_KEY }} # Opraveno podle názvu v GitHub Secrets
+          YT_API_KEY: ${{ secrets.YOUTUBE_API_KEY }} # Použije ten nově přidaný funkční klíč
           YT_PLAYLIST_ID: ${{ secrets.YT_PLAYLIST_ID }}
         run: python brain/check_playlist.py
 
@@ -41,7 +41,7 @@ jobs:
 
       - name: 🧠 Stage 2 – triage + sumarizace + brief
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTRHOPIS_API_KEY }} # Opraveno podle vašeho překlepu v Secrets
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Opraveno na správný název podle obrázku image_9260c4.png
         run: python brain/process_queue.py
 
       - name: 💾 Commit do yt-brain
