@@ -1,0 +1,8 @@
+{
+  "name": "YT Brain",
+  "description": "Video knowledge pipeline to extract knowledge from YouTube, summarize transcripts, and organize in Second Brain",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

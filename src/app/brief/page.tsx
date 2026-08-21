@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import Link from "next/link";
 
 type BriefData = {
   date: string;
@@ -78,11 +79,16 @@ export default function BriefPage() {
     }}>
       <div style={{ padding: "env(safe-area-inset-top, 20px) 20px 0" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", paddingTop: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-            <span style={{ fontSize: 20 }}>🧠</span>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3b82f6" }}>
-              AIVOS Brain Brief
-            </span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 20 }}>🧠</span>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3b82f6" }}>
+                AIVOS Brain Brief
+              </span>
+            </div>
+            <Link href="/" style={{ fontSize: 12, color: "#94a3b8", textDecoration: "none", background: "rgba(255,255,255,0.06)", padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
+              ← Dashboard
+            </Link>
           </div>
           <div style={{ fontSize: 26, fontWeight: 700, color: "#f1f5f9", lineHeight: 1.15 }}>
             {brief?.date ?? "Načítám..."}

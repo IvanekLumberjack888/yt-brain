@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
 
 type Video = {
   id: number
@@ -39,8 +41,18 @@ function ScoreDot({ score }: { score: number }) {
   )
 }
 
-function VideoCard({ video, onSummarize, onStatusChange, onClick, isLoading }: {
+function VideoCard({
+  video,
+  isSelected,
+  onToggleSelect,
+  onSummarize,
+  onStatusChange,
+  onClick,
+  isLoading
+}: {
   video: Video
+  isSelected: boolean
+  onToggleSelect: (id: number, e: React.MouseEvent | React.ChangeEvent) => void
   onSummarize: (id: number) => void
   onStatusChange: (id: number, status: string) => void
   onClick: (v: Video) => void
@@ -49,9 +61,32 @@ function VideoCard({ video, onSummarize, onStatusChange, onClick, isLoading }: {
   const hasTranscript = !!video.transcript && video.transcript.length > 0
 
   return (
-    <div className={`video-card${video.status === 'skip' ? ' skipped' : ''}`} onClick={() => onClick(video)}>
+    <div
+      id={`video-card-${video.id}`}
+      className={`video-card${video.status === 'skip' ? ' skipped' : ''}${isSelected ? ' selected' : ''}`}
+      onClick={() => onClick(video)}
+    >
       <div className="thumb-wrap">
-        <img src={thumb(video.video_id)} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+        <div
+          className="card-checkbox-wrap"
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          <input
+            id={`checkbox-video-${video.id}`}
+            type="checkbox"
+            className="card-checkbox"
+            checked={isSelected}
+            onChange={(e) => onToggleSelect(video.id, e)}
+            aria-label={`Select ${video.title || 'video'}`}
+          />
+        </div>
+        <img
+          src={thumb(video.video_id)}
+          alt={video.title || 'YouTube Video'}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+        />
         <span className={`thumb-badge badge-${video.priority}`}>{PRIORITY_LABEL[video.priority]}</span>
         {video.insights?.relevance_score && (
           <span className="thumb-score"><ScoreDot score={video.insights.relevance_score} /></span>
@@ -72,6 +107,7 @@ function VideoCard({ video, onSummarize, onStatusChange, onClick, isLoading }: {
         {video.insights?.para_location && <div className="card-para">→ {video.insights.para_location}</div>}
         <div className="card-actions" onClick={e => e.stopPropagation()}>
           <select
+            id={`status-select-${video.id}`}
             className="status-select"
             value={video.status}
             style={{ color: video.status === 'done' ? '#22c55e' : video.status === 'skip' ? '#6b6b8a' : video.status === 'in_progress' ? '#f59e0b' : '#ef4444' }}
@@ -85,6 +121,7 @@ function VideoCard({ video, onSummarize, onStatusChange, onClick, isLoading }: {
           {!video.summary
             ? (
               <button
+                id={`summarize-btn-${video.id}`}
                 className="summarize-btn"
                 disabled={isLoading || !hasTranscript}
                 title={!hasTranscript ? 'Transcript není dostupný' : ''}
@@ -110,9 +147,11 @@ function DetailPanel({ video, onClose }: { video: Video; onClose: () => void }) 
             <div className="modal-title">{video.title}</div>
             {video.channel && <div className="modal-channel">{video.channel}</div>}
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button id="modal-close-btn" className="modal-close" onClick={onClose}>✕</button>
         </div>
-        <div className="modal-thumb"><img src={thumb(video.video_id)} alt="" /></div>
+        <div className="modal-thumb">
+          <img src={thumb(video.video_id)} alt={video.title || ''} />
+        </div>
         <div className="modal-content">
           {video.insights ? (
             <>
@@ -147,9 +186,15 @@ function DetailPanel({ video, onClose }: { video: Video; onClose: () => void }) 
               </div>
             </>
           ) : (
-            <p style={{ fontSize: '0.875rem', color: '#6b6b8a' }}>Klikni na ⚡ Summarize pro zpracování (Claude Haiku ~$0.001).</p>
+            <p style={{ fontSize: '0.875rem', color: '#6b6b8a' }}>Klikni na ⚡ Summarize pro zpracování.</p>
           )}
-          <a href={`https://www.youtube.com/watch?v=${video.video_id}`} target="_blank" rel="noopener noreferrer" className="yt-link">
+          <a
+            id={`yt-link-${video.id}`}
+            href={`https://www.youtube.com/watch?v=${video.video_id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="yt-link"
+          >
             ▶ Otevřít na YouTube ↗
           </a>
         </div>
@@ -168,6 +213,13 @@ export default function Home() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [bulkActionLoading, setBulkActionLoading] = useState(false)
+  const [showBatchImport, setShowBatchImport] = useState(false)
+  const [batchUrls, setBatchUrls] = useState('')
+  const [batchProgress, setBatchProgress] = useState<{ total: number; current: number } | null>(null)
 
   const notify = (type: 'ok' | 'err', text: string) => {
     setMessage({ type, text })
@@ -188,6 +240,106 @@ export default function Home() {
 
   useEffect(() => { loadVideos() }, [loadVideos])
 
+  // Clear selections that are no longer in videos list
+  useEffect(() => {
+    setSelectedIds(prev => {
+      const currentIds = new Set(videos.map(v => v.id))
+      const next = new Set<number>()
+      for (const id of prev) {
+        if (currentIds.has(id)) next.add(id)
+      }
+      return next
+    })
+  }, [videos])
+
+  const toggleSelectOne = (id: number, e: React.MouseEvent | React.ChangeEvent) => {
+    e.stopPropagation()
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const isAllSelected = useMemo(() => {
+    if (videos.length === 0) return false
+    return videos.every(v => selectedIds.has(v.id))
+  }, [videos, selectedIds])
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(videos.map(v => v.id)))
+    }
+  }
+
+  const handleBulkStatus = async (status: string) => {
+    if (selectedIds.size === 0) return
+    const ids = Array.from(selectedIds)
+    setBulkActionLoading(true)
+    try {
+      const res = await fetch('/api/videos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, status }),
+      })
+      if (!res.ok) throw new Error('Chyba při hromadné změně')
+      setVideos(prev => prev.map(v => selectedIds.has(v.id) ? { ...v, status: status as Video['status'] } : v))
+      notify('ok', `Aktualizováno ${ids.length} videí na ${status}`)
+    } catch (e) {
+      notify('err', e instanceof Error ? e.message : 'Chyba')
+    } finally {
+      setBulkActionLoading(false)
+    }
+  }
+
+  const handleBulkPriority = async (priority: string) => {
+    if (selectedIds.size === 0) return
+    const ids = Array.from(selectedIds)
+    setBulkActionLoading(true)
+    try {
+      const res = await fetch('/api/videos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, priority }),
+      })
+      if (!res.ok) throw new Error('Chyba při hromadné prioritě')
+      setVideos(prev => prev.map(v => selectedIds.has(v.id) ? { ...v, priority: priority as Video['priority'] } : v))
+      notify('ok', `Priorita nastavena pro ${ids.length} videí`)
+    } catch (e) {
+      notify('err', e instanceof Error ? e.message : 'Chyba')
+    } finally {
+      setBulkActionLoading(false)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return
+    const count = selectedIds.size
+    const confirmDelete = window.confirm(`Opravdu chceš smazat ${count} vybraných videí?`)
+    if (!confirmDelete) return
+
+    const ids = Array.from(selectedIds)
+    setBulkActionLoading(true)
+    try {
+      const res = await fetch('/api/videos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      })
+      if (!res.ok) throw new Error('Chyba při mazání videí')
+      setVideos(prev => prev.filter(v => !selectedIds.has(v.id)))
+      setSelectedIds(new Set())
+      notify('ok', `Smazáno ${count} videí`)
+    } catch (e) {
+      notify('err', e instanceof Error ? e.message : 'Chyba')
+    } finally {
+      setBulkActionLoading(false)
+    }
+  }
+
   const handleFetch = async () => {
     if (!urlInput.trim()) return
     setFetchingUrl(true)
@@ -204,6 +356,39 @@ export default function Home() {
       setUrlInput('')
       loadVideos()
     } catch (e) { notify('err', e instanceof Error ? e.message : 'Chyba') } finally { setFetchingUrl(false) }
+  }
+
+  const handleBatchImport = async () => {
+    const rawLines = batchUrls.split(/[\n,\s]+/).map(s => s.trim()).filter(Boolean)
+    const validUrls = rawLines.filter(u => u.includes('youtube.com') || u.includes('youtu.be'))
+    if (validUrls.length === 0) {
+      notify('err', 'Nenalezeny žádné platné YouTube URL')
+      return
+    }
+
+    setBatchProgress({ total: validUrls.length, current: 0 })
+    let addedCount = 0
+
+    for (let i = 0; i < validUrls.length; i++) {
+      const u = validUrls[i]
+      setBatchProgress({ total: validUrls.length, current: i + 1 })
+      try {
+        await fetch('/api/transcript', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: u }),
+        })
+        addedCount++
+      } catch {
+        // continue
+      }
+    }
+
+    notify('ok', `Importováno ${addedCount} z ${validUrls.length} videí`)
+    setBatchUrls('')
+    setShowBatchImport(false)
+    setBatchProgress(null)
+    loadVideos()
   }
 
   const handleSummarize = async (id: number) => {
@@ -242,13 +427,186 @@ export default function Home() {
       {message && <div className={`toast toast-${message.type}`}>{message.text}</div>}
       {selectedVideo && <DetailPanel video={selectedVideo} onClose={() => setSelectedVideo(null)} />}
 
-      <header style={{ marginBottom: '2rem' }}>
+      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <span className="app-title">YT_BRAIN</span>
-          <span className="app-version">v0.1 — second brain pipeline</span>
+          <div>
+            <span className="app-title">YT_BRAIN</span>
+            <span className="app-version">v0.1 — second brain pipeline</span>
+          </div>
+          <div className="app-subtitle">Stáhni transcript → ulož → summarizuj on-demand → exportuj do Notion</div>
         </div>
-        <div className="app-subtitle">Stáhni transcript → ulož → summarizuj on-demand → exportuj do Notion</div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button
+            id="batch-import-toggle-btn"
+            className="batch-toggle-btn"
+            onClick={() => setShowBatchImport(!showBatchImport)}
+          >
+            {showBatchImport ? '▲ Zavřít Batch' : '📋 Hromadný import'}
+          </button>
+          <Link
+            id="brief-nav-link"
+            href="/brief"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: 'rgba(99,80,255,0.15)',
+              border: '1px solid rgba(99,80,255,0.35)',
+              color: '#a5b4fc',
+              padding: '8px 14px',
+              borderRadius: 10,
+              textDecoration: 'none',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              fontFamily: 'var(--mono)',
+            }}
+          >
+            🧠 Denní Brief →
+          </Link>
+        </div>
       </header>
+
+      {/* Batch Import Box */}
+      {showBatchImport && (
+        <div style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border-hi)',
+          borderRadius: 14,
+          padding: '1rem',
+          marginBottom: '1.5rem',
+        }}>
+          <div style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text)', marginBottom: 6, fontFamily: 'var(--mono)' }}>
+            Hromadný import YouTube URL (oddělené novým řádkem):
+          </div>
+          <textarea
+            id="batch-urls-textarea"
+            className="batch-area"
+            value={batchUrls}
+            onChange={(e) => setBatchUrls(e.target.value)}
+            placeholder={"https://www.youtube.com/watch?v=...\nhttps://www.youtube.com/watch?v=..."}
+            rows={4}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '0.725rem', color: 'var(--muted)', fontFamily: 'var(--mono)' }}>
+              {batchProgress ? `Importuji ${batchProgress.current}/${batchProgress.total}...` : 'Podporuje více odkazů naráz.'}
+            </div>
+            <button
+              id="batch-import-submit-btn"
+              className="fetch-btn"
+              onClick={handleBatchImport}
+              disabled={!!batchProgress || !batchUrls.trim()}
+            >
+              {batchProgress ? `⏳ (${batchProgress.current}/${batchProgress.total})` : 'Importovat vše'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Action Sticky Bar */}
+      {selectedIds.size > 0 && (
+        <div className="bulk-bar-container" id="bulk-action-bar-container">
+          <div className="bulk-action-bar" id="bulk-action-bar">
+            <div className="bulk-left">
+              <label className="bulk-select-all" id="bulk-select-all-label">
+                <input
+                  id="bulk-select-all-checkbox"
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={toggleSelectAll}
+                />
+                <span>Vše ({videos.length})</span>
+              </label>
+              <span className="bulk-badge" id="bulk-selected-badge">{selectedIds.size} vybráno</span>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontFamily: 'var(--mono)', marginRight: 2 }}>
+                Stav:
+              </span>
+              <button
+                id="bulk-status-to-watch-btn"
+                className="bulk-btn"
+                disabled={bulkActionLoading}
+                onClick={() => handleBulkStatus('to_watch')}
+              >
+                🔴 To Watch
+              </button>
+              <button
+                id="bulk-status-in-progress-btn"
+                className="bulk-btn"
+                disabled={bulkActionLoading}
+                onClick={() => handleBulkStatus('in_progress')}
+              >
+                🟡 In Progress
+              </button>
+              <button
+                id="bulk-status-done-btn"
+                className="bulk-btn"
+                disabled={bulkActionLoading}
+                onClick={() => handleBulkStatus('done')}
+              >
+                ✅ Done
+              </button>
+              <button
+                id="bulk-status-skip-btn"
+                className="bulk-btn"
+                disabled={bulkActionLoading}
+                onClick={() => handleBulkStatus('skip')}
+              >
+                ⏭️ Skip
+              </button>
+
+              <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontFamily: 'var(--mono)', marginLeft: 6, marginRight: 2 }}>
+                Priorita:
+              </span>
+              <button
+                id="bulk-priority-high-btn"
+                className="bulk-btn"
+                disabled={bulkActionLoading}
+                onClick={() => handleBulkPriority('high')}
+              >
+                🔥 High
+              </button>
+              <button
+                id="bulk-priority-med-btn"
+                className="bulk-btn"
+                disabled={bulkActionLoading}
+                onClick={() => handleBulkPriority('medium')}
+              >
+                📌 Med
+              </button>
+              <button
+                id="bulk-priority-low-btn"
+                className="bulk-btn"
+                disabled={bulkActionLoading}
+                onClick={() => handleBulkPriority('low')}
+              >
+                💤 Low
+              </button>
+
+              <button
+                id="bulk-delete-btn"
+                className="bulk-btn bulk-btn-delete"
+                disabled={bulkActionLoading}
+                onClick={handleBulkDelete}
+                style={{ marginLeft: 6 }}
+              >
+                🗑️ Smazat ({selectedIds.size})
+              </button>
+
+              <button
+                id="bulk-clear-selection-btn"
+                className="bulk-btn"
+                onClick={() => setSelectedIds(new Set())}
+                style={{ marginLeft: 4 }}
+                title="Zrušit výběr"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="stats-grid">
         {[
@@ -257,7 +615,7 @@ export default function Home() {
           { label: '🔥 high',   value: stats.high,       color: '#ef4444' },
           { label: '✅ done',   value: stats.done,       color: '#6b6b8a' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="stat-card">
+          <div key={label} className="stat-card" id={`stat-card-${label}`}>
             <div className="stat-value" style={{ color }}>{value}</div>
             <div className="stat-label">{label}</div>
           </div>
@@ -266,6 +624,7 @@ export default function Home() {
 
       <div className="url-row">
         <input
+          id="url-input"
           className="url-input"
           type="text"
           value={urlInput}
@@ -273,7 +632,7 @@ export default function Home() {
           onKeyDown={e => e.key === 'Enter' && handleFetch()}
           placeholder="https://youtube.com/watch?v=..."
         />
-        <button className="fetch-btn" onClick={handleFetch} disabled={fetchingUrl || !urlInput.trim()}>
+        <button id="fetch-url-btn" className="fetch-btn" onClick={handleFetch} disabled={fetchingUrl || !urlInput.trim()}>
           {fetchingUrl ? '↓ ...' : '↓ Fetch'}
         </button>
       </div>
@@ -281,18 +640,39 @@ export default function Home() {
       <div className="filter-row">
         <div className="filter-group">
           {['all', 'to_watch', 'in_progress', 'done', 'skip'].map(s => (
-            <button key={s} className={`filter-btn${filterStatus === s ? ' active' : ''}`} onClick={() => setFilterStatus(s)}>
+            <button
+              key={s}
+              id={`filter-status-${s}-btn`}
+              className={`filter-btn${filterStatus === s ? ' active' : ''}`}
+              onClick={() => setFilterStatus(s)}
+            >
               {s === 'all' ? 'all' : STATUS_LABEL[s]}
             </button>
           ))}
         </div>
         <div className="filter-group">
           {['all', 'high', 'medium', 'low'].map(p => (
-            <button key={p} className={`filter-btn${filterPriority === p ? ' active' : ''}`} onClick={() => setFilterPriority(p)}>
+            <button
+              key={p}
+              id={`filter-priority-${p}-btn`}
+              className={`filter-btn${filterPriority === p ? ' active' : ''}`}
+              onClick={() => setFilterPriority(p)}
+            >
               {p === 'all' ? 'all' : PRIORITY_LABEL[p]}
             </button>
           ))}
         </div>
+
+        {videos.length > 0 && selectedIds.size === 0 && (
+          <button
+            id="select-all-shortcut-btn"
+            className="filter-btn"
+            onClick={toggleSelectAll}
+            style={{ marginLeft: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8 }}
+          >
+            ☑️ Vybrat vše
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -303,11 +683,13 @@ export default function Home() {
           <div className="empty-text">Žádná videa. Vlož YouTube URL výše.</div>
         </div>
       ) : (
-        <div className="video-grid">
+        <div className="video-grid" id="video-grid">
           {videos.map(v => (
             <VideoCard
               key={v.id}
               video={v}
+              isSelected={selectedIds.has(v.id)}
+              onToggleSelect={toggleSelectOne}
               onSummarize={handleSummarize}
               onStatusChange={handleStatusChange}
               onClick={setSelectedVideo}

@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       video: inserted[0],
       cached: false,
-      ...(transcriptWarning ? { warning: transcriptWarning } : {})\
+      ...(transcriptWarning ? { warning: transcriptWarning } : {})
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'

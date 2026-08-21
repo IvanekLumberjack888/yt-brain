@@ -23,9 +23,39 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { id, status, priority } = await req.json()
-    if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+    const body = await req.json()
+    const { id, ids, status, priority } = body
+
+    if (ids && Array.isArray(ids) && ids.length > 0) {
+      for (const singleId of ids) {
+        await sql`UPDATE videos SET status = COALESCE(${status ?? null}, status), priority = COALESCE(${priority ?? null}, priority) WHERE id = ${singleId}`
+      }
+      return NextResponse.json({ ok: true, count: ids.length })
+    }
+
+    if (!id) return NextResponse.json({ error: 'id or ids is required' }, { status: 400 })
     await sql`UPDATE videos SET status = COALESCE(${status ?? null}, status), priority = COALESCE(${priority ?? null}, priority) WHERE id = ${id}`
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const { id, ids } = body
+
+    if (ids && Array.isArray(ids) && ids.length > 0) {
+      for (const singleId of ids) {
+        await sql`DELETE FROM videos WHERE id = ${singleId}`
+      }
+      return NextResponse.json({ ok: true, count: ids.length })
+    }
+
+    if (!id) return NextResponse.json({ error: 'id or ids is required' }, { status: 400 })
+    await sql`DELETE FROM videos WHERE id = ${id}`
     return NextResponse.json({ ok: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
