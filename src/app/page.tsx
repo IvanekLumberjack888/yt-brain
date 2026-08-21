@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { Language, translations } from '@/lib/i18n'
 
 type KnowledgeItem = {
   id: string | number
@@ -41,6 +42,7 @@ type AISource = {
 }
 
 export default function Home() {
+  const [lang, setLang] = useState<Language>('cz')
   const [activeTab, setActiveTab] = useState<'vault' | 'ai' | 'table' | 'ingest'>('vault')
   const [items, setItems] = useState<KnowledgeItem[]>([])
   const [stats, setStats] = useState<KnowledgeStats | null>(null)
@@ -67,6 +69,29 @@ export default function Home() {
   // Feedback Toast
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
+  // Initialize language from localStorage
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem('aivos_lang') as Language
+      if (savedLang === 'cz' || savedLang === 'en') {
+        setLang(savedLang)
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const handleSetLang = (newLang: Language) => {
+    setLang(newLang)
+    try {
+      localStorage.setItem('aivos_lang', newLang)
+    } catch {
+      // ignore
+    }
+  }
+
+  const t = translations[lang]
+
   const notify = (type: 'ok' | 'err', text: string) => {
     setMessage({ type, text })
     setTimeout(() => setMessage(null), 3500)
@@ -90,11 +115,11 @@ export default function Home() {
         setStats(data.stats || null)
       }
     } catch {
-      notify('err', 'Nepodařilo se načíst znalostní bázi.')
+      notify('err', t.loadFailedToast)
     } finally {
       setLoading(false)
     }
-  }, [searchQuery, selectedPara, selectedTier, selectedTag])
+  }, [searchQuery, selectedPara, selectedTier, selectedTag, t.loadFailedToast])
 
   useEffect(() => {
     loadKnowledge()
@@ -113,14 +138,14 @@ export default function Home() {
       const res = await fetch('/api/knowledge/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: query.trim() }),
+        body: JSON.stringify({ question: query.trim(), lang }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Chyba při dotazování')
       setAiAnswer(data.answer)
       setAiSources(data.sources || [])
     } catch (e) {
-      notify('err', e instanceof Error ? e.message : 'AI chyba')
+      notify('err', e instanceof Error ? e.message : 'AI error')
     } finally {
       setAiLoading(false)
     }
@@ -148,7 +173,7 @@ export default function Home() {
         })
       }
 
-      notify('ok', 'Znalost úspěšně extrahována a uložena do databáze ✓')
+      notify('ok', t.ingestSuccessToast)
       setSingleUrl('')
       loadKnowledge()
       setActiveTab('vault')
@@ -164,7 +189,7 @@ export default function Home() {
     const rawLines = batchUrls.split(/[\n,\s]+/).map(s => s.trim()).filter(Boolean)
     const validUrls = rawLines.filter(u => u.includes('youtube.com') || u.includes('youtu.be'))
     if (validUrls.length === 0) {
-      notify('err', 'Nenalezeny žádné platné YouTube URL.')
+      notify('err', t.ingestNoUrlsToast)
       return
     }
 
@@ -194,7 +219,7 @@ export default function Home() {
       }
     }
 
-    notify('ok', `Zpracováno a zaindexováno ${count} z ${validUrls.length} záznamů!`)
+    notify('ok', t.ingestBatchSuccessToast(count, validUrls.length))
     setBatchUrls('')
     setIngestProgress(null)
     loadKnowledge()
@@ -216,28 +241,19 @@ tags: ${item.tags.join(', ')}
 
 # ${item.title}
 
-> ${item.tier === 'HIGH' ? '🟢 TIER 1 HIGH' : '🟡 TIER 2'} | Skóre: ${item.score}/10 | ${item.channel} | ${item.para}
+> ${item.tier === 'HIGH' ? '🟢 TIER 1 HIGH' : '🟡 TIER 2'} | Score: ${item.score}/10 | ${item.channel} | ${item.para}
 
 ## TL;DR
 ${item.tldr}
 
-## Klíčové poznatky (Key Insights)
+## ${lang === 'en' ? 'Key Insights' : 'Klíčové poznatky (Key Insights)'}
 ${item.keyPoints.map(k => `- ${k}`).join('\n')}
 
-${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionItems.map(a => `- [ ] ${a}`).join('\n')}\n` : ''}
+${item.actionItems.length > 0 ? `## ${lang === 'en' ? 'Action Items' : 'Akční kroky (Action Items)'}\n${item.actionItems.map(a => `- [ ] ${a}`).join('\n')}\n` : ''}
 `
     navigator.clipboard.writeText(md)
-    notify('ok', 'Znalost zkopírována do schránky (Notion Markdown) 📋')
+    notify('ok', t.notionCopiedToast)
   }
-
-  const promptShortcuts = [
-    'Jak optimalizovat spotřebu Claude tokenů o 50-65%?',
-    'Které Claude Code pluginy a techniky nejvíce šetří čas?',
-    'Vysvětli Azure VNet, podsítě a zabezpečení pro data engineering',
-    'Jak fungují AI agenti a jejich architektura pro juniora?',
-    'Jak aplikovat P.A.R.A. metodu pro organizaci AI znalostí?',
-    'Jaký je rozdíl mezi LoRA a QLoRA fine-tuningem?',
-  ]
 
   return (
     <div className="container">
@@ -247,15 +263,35 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
       <header className="app-header">
         <div>
           <div className="app-title-row">
-            <span className="app-title">🧠 AIVOS SECOND BRAIN</span>
-            <span className="app-version">v2.0 — Knowledge Base</span>
+            <span className="app-title">{t.appName}</span>
+            <span className="app-version">{t.appVersion}</span>
           </div>
           <div className="app-subtitle">
-            Znalostní báze pro Data Engineering, AI agenty a Claude ekosystém. Extrahováno přímo ze zdrojů.
+            {t.appSubtitle}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Language Switcher Button (CZ / EN) */}
+          <div className="lang-switcher" id="lang-switcher-control" aria-label="Language selector">
+            <button
+              id="lang-cz-btn"
+              className={`lang-btn ${lang === 'cz' ? 'active' : ''}`}
+              onClick={() => handleSetLang('cz')}
+              title="Čeština"
+            >
+              🇨🇿 CZ
+            </button>
+            <button
+              id="lang-en-btn"
+              className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
+              onClick={() => handleSetLang('en')}
+              title="English"
+            >
+              🇬🇧 EN
+            </button>
+          </div>
+
           <Link
             id="header-brief-link"
             href="/brief"
@@ -266,7 +302,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
               background: 'rgba(99,80,255,0.15)',
               border: '1px solid rgba(99,80,255,0.35)',
               color: '#a5b4fc',
-              padding: '8px 14px',
+              padding: '6px 13px',
               borderRadius: 10,
               textDecoration: 'none',
               fontSize: '0.825rem',
@@ -274,7 +310,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
               fontFamily: 'var(--mono)',
             }}
           >
-            🎙️ Denní Briefingy →
+            {t.dailyBriefsBtn}
           </Link>
         </div>
       </header>
@@ -286,28 +322,28 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
           className={`nav-tab-btn ${activeTab === 'vault' ? 'active' : ''}`}
           onClick={() => setActiveTab('vault')}
         >
-          📚 Znalostní báze (Karty)
+          {t.tabVault}
         </button>
         <button
           id="tab-table-btn"
           className={`nav-tab-btn ${activeTab === 'table' ? 'active' : ''}`}
           onClick={() => setActiveTab('table')}
         >
-          📊 Matice znalostí (Tabulka)
+          {t.tabTable}
         </button>
         <button
           id="tab-ai-btn"
           className={`nav-tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
           onClick={() => setActiveTab('ai')}
         >
-          🤖 AI Asistent (Zeptej se mozku)
+          {t.tabAi}
         </button>
         <button
           id="tab-ingest-btn"
           className={`nav-tab-btn ${activeTab === 'ingest' ? 'active' : ''}`}
           onClick={() => setActiveTab('ingest')}
         >
-          📥 Extrakce & Ingest
+          {t.tabIngest}
         </button>
       </nav>
 
@@ -319,7 +355,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
             <div className="stat-value" style={{ color: 'var(--accent-hi)' }}>
               {stats?.totalKnowledgeRecords ?? items.length}
             </div>
-            <div className="stat-label">Znalostních záznamů</div>
+            <div className="stat-label">{t.statTotalRecords}</div>
           </div>
         </div>
         <div className="stat-card" id="stat-tier1-records">
@@ -328,7 +364,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
             <div className="stat-value" style={{ color: 'var(--green)' }}>
               {stats?.tier1HighPriority ?? items.filter(i => i.score >= 8).length}
             </div>
-            <div className="stat-label">TIER 1 (Skóre 8-10)</div>
+            <div className="stat-label">{t.statTier1}</div>
           </div>
         </div>
         <div className="stat-card" id="stat-action-items">
@@ -337,7 +373,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
             <div className="stat-value" style={{ color: 'var(--yellow)' }}>
               {stats?.actionItemsCount ?? items.reduce((acc, i) => acc + i.actionItems.length, 0)}
             </div>
-            <div className="stat-label">Akčních kroků & SOP</div>
+            <div className="stat-label">{t.statActionItems}</div>
           </div>
         </div>
         <div className="stat-card" id="stat-para-active">
@@ -346,7 +382,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
             <div className="stat-value" style={{ color: '#60a5fa' }}>
               {stats?.paraCounts?.['10_PROJEKTY'] ?? 15}
             </div>
-            <div className="stat-label">10_PROJEKTY v Notion</div>
+            <div className="stat-label">{t.statParaProjects}</div>
           </div>
         </div>
       </div>
@@ -361,7 +397,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
                 id="knowledge-search-input"
                 className="search-input"
                 type="text"
-                placeholder="🔍 Hledat v celém mozku (např. 'Claude tokeny', 'Azure VNet', 'ADHD focus', 'LoRA')..."
+                placeholder={t.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -386,10 +422,10 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
             {/* P.A.R.A. Folder Filter */}
             <div style={{ marginBottom: '0.625rem', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.725rem', fontFamily: 'var(--mono)', color: 'var(--muted)', marginRight: 4 }}>
-                P.A.R.A.:
+                {t.paraLabel}
               </span>
               {[
-                { id: 'all', label: `Všechny složky (${stats?.totalKnowledgeRecords || items.length})` },
+                { id: 'all', label: `${t.paraAll} (${stats?.totalKnowledgeRecords || items.length})` },
                 { id: '10_PROJEKTY', label: `10_PROJEKTY (${stats?.paraCounts?.['10_PROJEKTY'] || 0})` },
                 { id: '20_OBLASTI', label: `20_OBLASTI (${stats?.paraCounts?.['20_OBLASTI'] || 0})` },
                 { id: '30_ZDROJE', label: `30_ZDROJE (${stats?.paraCounts?.['30_ZDROJE'] || 0})` },
@@ -409,21 +445,21 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
             {/* Relevance Score & Priority Tier Filter */}
             <div className="filter-pills-row">
               <span style={{ fontSize: '0.725rem', fontFamily: 'var(--mono)', color: 'var(--muted)', marginRight: 4 }}>
-                Relevance:
+                {t.relevanceLabel}
               </span>
               {[
-                { id: 'all', label: 'Vše (Skóre 1-10)' },
-                { id: 'high', label: '🔥 Pouze TIER 1 (Skóre 8-10)' },
-                { id: 'medium', label: '📌 TIER 2 (Skóre 5-7)' },
-                { id: 'low', label: '💤 TIER 3 (Skóre 1-4)' },
-              ].map(t => (
+                { id: 'all', label: t.relevanceAll },
+                { id: 'high', label: t.relevanceHigh },
+                { id: 'medium', label: t.relevanceMed },
+                { id: 'low', label: t.relevanceLow },
+              ].map(tr => (
                 <button
-                  key={t.id}
-                  id={`tier-filter-${t.id}`}
-                  className={`filter-pill-btn ${selectedTier === t.id ? 'active' : ''}`}
-                  onClick={() => setSelectedTier(t.id)}
+                  key={tr.id}
+                  id={`tier-filter-${tr.id}`}
+                  className={`filter-pill-btn ${selectedTier === tr.id ? 'active' : ''}`}
+                  onClick={() => setSelectedTier(tr.id)}
                 >
-                  {t.label}
+                  {tr.label}
                 </button>
               ))}
 
@@ -436,10 +472,10 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
                   value={selectedTag}
                   onChange={(e) => setSelectedTag(e.target.value)}
                 >
-                  <option value="all">🏷️ Všechny štítky ({stats.topTags.length})</option>
-                  {stats.topTags.map(t => (
-                    <option key={t.name} value={t.name}>
-                      #{t.name} ({t.count})
+                  <option value="all">{t.allTags} ({stats.topTags.length})</option>
+                  {stats.topTags.map(tg => (
+                    <option key={tg.name} value={tg.name}>
+                      #{tg.name} ({tg.count})
                     </option>
                   ))}
                 </select>
@@ -450,7 +486,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
           {/* Results Summary Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <div style={{ fontSize: '0.8rem', color: 'var(--muted)', fontFamily: 'var(--mono)' }}>
-              Nalezeno <strong style={{ color: 'var(--text)' }}>{items.length}</strong> znalostních záznamů
+              {t.foundRecords} <strong style={{ color: 'var(--text)' }}>{items.length}</strong> {t.recordsCountLabel}
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               <button
@@ -458,24 +494,43 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
                 className={`filter-pill-btn ${activeTab === 'vault' ? 'active' : ''}`}
                 onClick={() => setActiveTab('vault')}
               >
-                🎴 Karty
+                {t.viewCards}
               </button>
               <button
                 id="switch-to-table-view"
                 className={`filter-pill-btn ${activeTab === 'table' ? 'active' : ''}`}
                 onClick={() => setActiveTab('table')}
               >
-                📋 Tabulka
+                {t.viewTable}
               </button>
             </div>
           </div>
 
           {loading ? (
-            <div className="empty-state"><div className="empty-text">Načítám znalostní záznamy...</div></div>
+            <div className="knowledge-grid" id="knowledge-skeleton-grid">
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <div key={n} className="k-card-skeleton">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="skeleton" style={{ width: '65%', height: '22px' }} />
+                    <div className="skeleton" style={{ width: '70px', height: '22px', borderRadius: '6px' }} />
+                  </div>
+                  <div className="skeleton" style={{ width: '40%', height: '14px' }} />
+                  <div className="skeleton" style={{ width: '130px', height: '18px', borderRadius: '4px' }} />
+                  <div className="skeleton" style={{ width: '100%', height: '55px', borderRadius: '8px' }} />
+                  <div className="skeleton" style={{ width: '90%', height: '16px' }} />
+                  <div className="skeleton" style={{ width: '80%', height: '16px' }} />
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                    <div className="skeleton" style={{ width: '50px', height: '18px' }} />
+                    <div className="skeleton" style={{ width: '60px', height: '18px' }} />
+                    <div className="skeleton" style={{ width: '45px', height: '18px' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : items.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">📭</div>
-              <div className="empty-text">Nenalezeny žádné záznamy odpovídající filtru.</div>
+              <div className="empty-text">{t.noRecordsFound}</div>
             </div>
           ) : activeTab === 'vault' ? (
             /* Card Grid View */
@@ -493,7 +548,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
                         <div className="k-card-channel">{item.channel} · {item.date}</div>
                       </div>
                       <span className={`k-score-pill ${item.score >= 8 ? 'k-score-high' : item.score >= 5 ? 'k-score-med' : 'k-score-low'}`}>
-                        {item.score}/10 {item.score >= 8 ? '🔥 TIER 1' : '📌 TIER 2'}
+                        {item.score}/10 {item.score >= 8 ? t.tier1Badge : item.score >= 5 ? t.tier2Badge : t.tier3Badge}
                       </span>
                     </div>
 
@@ -519,7 +574,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
 
                     {item.actionItems.length > 0 && (
                       <div className="k-actions-box">
-                        <div className="k-actions-label">⚡ Akční krok / Implementace:</div>
+                        <div className="k-actions-label">{t.actionLabel}</div>
                         {item.actionItems.map((act, idx) => (
                           <div key={idx} className="k-action-item">
                             → {act}
@@ -530,8 +585,8 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
 
                     {item.tags.length > 0 && (
                       <div className="k-tags-row">
-                        {item.tags.map(t => (
-                          <span key={t} className="k-tag">#{t.replace(/^#/, '')}</span>
+                        {item.tags.map(tagItem => (
+                          <span key={tagItem} className="k-tag">#{tagItem.replace(/^#/, '')}</span>
                         ))}
                       </div>
                     )}
@@ -544,7 +599,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
                       onClick={() => handleCopyToNotion(item)}
                       title="Zkopíruje formátovaný markdown pro Notion"
                     >
-                      📋 Kopírovat do Notion
+                      {t.copyToNotion}
                     </button>
 
                     {item.sourceUrl && (
@@ -554,7 +609,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
                         rel="noopener noreferrer"
                         className="k-source-link"
                       >
-                        Zdrojové video ↗
+                        {t.sourceVideoLink}
                       </a>
                     )}
                   </div>
@@ -567,12 +622,12 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
               <table className="k-table" id="knowledge-matrix-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '80px' }}>Skóre</th>
-                    <th style={{ width: '240px' }}>Název & Kanál</th>
-                    <th style={{ width: '180px' }}>P.A.R.A. Zařazení</th>
-                    <th>TL;DR & Klíčové poznatky</th>
-                    <th style={{ width: '180px' }}>Akční krok</th>
-                    <th style={{ width: '140px' }}>Akce</th>
+                    <th style={{ width: '80px' }}>{t.tableScore}</th>
+                    <th style={{ width: '240px' }}>{t.tableNameChannel}</th>
+                    <th style={{ width: '180px' }}>{t.tablePara}</th>
+                    <th>{t.tableInsights}</th>
+                    <th style={{ width: '180px' }}>{t.tableAction}</th>
+                    <th style={{ width: '140px' }}>{t.tableActionsCol}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -636,13 +691,13 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
           <div className="ai-header">
             <div className="ai-title">
               <span>🤖</span>
-              <span>AIVOS Brain Intelligence</span>
+              <span>{t.aiTitle}</span>
             </div>
-            <span className="ai-badge">⚡ RAG přes celou znalostní bázi</span>
+            <span className="ai-badge">{t.aiBadge}</span>
           </div>
 
           <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '1rem' }}>
-            Zeptej se na cokoliv ze svých uložených témat (Claude Code, tokeny, Azure, Databricks, AI agenti, P.A.R.A. v Notion). Model prohledá tvůj Second Brain a syntetizuje konkrétní odpověď.
+            {t.aiSubtitle}
           </p>
 
           <div className="ai-input-wrap">
@@ -650,7 +705,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
               id="ai-question-input"
               className="ai-input"
               type="text"
-              placeholder="Např. 'Jak nejlépe optimalizovat Claude tokeny?' nebo 'Jak nastavit Azure VNet pro data pipeline?'"
+              placeholder={t.aiInputPlaceholder}
               value={aiQuestion}
               onChange={(e) => setAiQuestion(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
@@ -661,27 +716,27 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
               onClick={() => handleAskAI()}
               disabled={aiLoading || !aiQuestion.trim()}
             >
-              {aiLoading ? 'Syntetizuji...' : '🧠 Zeptej se'}
+              {aiLoading ? t.aiSynthesizing : t.aiAskBtn}
             </button>
           </div>
 
           {/* Quick Prompt Suggestions */}
           <div style={{ marginBottom: '1.25rem' }}>
             <div style={{ fontSize: '0.725rem', fontFamily: 'var(--mono)', color: 'var(--muted)', marginBottom: 6 }}>
-              Doporučené dotazy ze znalostní báze:
+              {t.aiPromptsLabel}
             </div>
             <div className="ai-prompts-row">
-              {promptShortcuts.map((p, idx) => (
+              {t.aiPrompts.map((promptText, idx) => (
                 <button
                   key={idx}
                   id={`prompt-pill-${idx}`}
                   className="ai-prompt-pill"
                   onClick={() => {
-                    setAiQuestion(p)
-                    handleAskAI(p)
+                    setAiQuestion(promptText)
+                    handleAskAI(promptText)
                   }}
                 >
-                  💡 {p}
+                  💡 {promptText}
                 </button>
               ))}
             </div>
@@ -691,7 +746,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
           {aiAnswer && (
             <div className="ai-response-box" id="ai-answer-box">
               <div style={{ fontSize: '0.75rem', fontFamily: 'var(--mono)', color: 'var(--accent-hi)', marginBottom: 8, fontWeight: 700 }}>
-                💡 SYNTÉZA ZE SECOND BRAIN:
+                {t.aiSynthesisHeader}
               </div>
               <div className="ai-response-content">
                 {aiAnswer}
@@ -700,7 +755,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
               {aiSources.length > 0 && (
                 <div className="ai-response-sources">
                   <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontFamily: 'var(--mono)' }}>
-                    Použité zdroje:
+                    {t.aiSourcesUsed}
                   </span>
                   {aiSources.map((src, idx) => (
                     <a
@@ -727,10 +782,10 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
           {/* Single URL Extractor */}
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem' }}>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 4 }}>
-              📥 Přidat nové video do znalostní báze
+              {t.ingestSingleTitle}
             </div>
             <p style={{ fontSize: '0.825rem', color: 'var(--muted)', marginBottom: '1rem' }}>
-              Vlož YouTube URL. Systém automaticky stáhne transcript, vygeneruje TL;DR, klíčové body, akční kroky a zařadí položku do P.A.R.A. systému.
+              {t.ingestSingleDesc}
             </p>
 
             <div style={{ display: 'flex', gap: 8 }}>
@@ -750,7 +805,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
                 onClick={handleIngestSingle}
                 disabled={ingesting || !singleUrl.trim()}
               >
-                {ingesting ? 'Extrahuji...' : 'Extrahovat znalosti'}
+                {ingesting ? t.ingestSingleLoading : t.ingestSingleBtn}
               </button>
             </div>
           </div>
@@ -758,10 +813,10 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
           {/* Batch Ingest Box */}
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '1.5rem' }}>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: 4 }}>
-              📋 Hromadný import seznamu URL
+              {t.ingestBatchTitle}
             </div>
             <p style={{ fontSize: '0.825rem', color: 'var(--muted)', marginBottom: '1rem' }}>
-              Vlož libovolné množství YouTube odkazů oddělených novým řádkem.
+              {t.ingestBatchDesc}
             </p>
 
             <textarea
@@ -775,7 +830,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--muted)', fontFamily: 'var(--mono)' }}>
-                {ingestProgress ? `Zpracovávám ${ingestProgress.current} z ${ingestProgress.total}...` : 'Automaticky uloží a zanalyzuje obsah.'}
+                {ingestProgress ? t.ingestBatchProgress(ingestProgress.current, ingestProgress.total) : t.ingestBatchHelper}
               </div>
               <button
                 id="batch-ingest-submit-btn"
@@ -784,7 +839,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
                 onClick={handleIngestBatch}
                 disabled={!!ingestProgress || !batchUrls.trim()}
               >
-                {ingestProgress ? `⏳ (${ingestProgress.current}/${ingestProgress.total})` : 'Importovat a zaindexovat vše'}
+                {ingestProgress ? `⏳ (${ingestProgress.current}/${ingestProgress.total})` : t.ingestBatchBtn}
               </button>
             </div>
           </div>
@@ -793,7 +848,7 @@ ${item.actionItems.length > 0 ? `## Akční kroky (Action Items)\n${item.actionI
 
       {/* App Footer */}
       <footer className="app-footer">
-        AIVOS Second Brain · Knowledge Base & Intelligence Engine · {new Date().getFullYear()}
+        {t.footerText}
       </footer>
     </div>
   )

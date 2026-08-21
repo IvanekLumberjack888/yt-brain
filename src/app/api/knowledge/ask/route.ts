@@ -4,9 +4,9 @@ import { getAllKnowledgeItems, KnowledgeItem } from '@/lib/knowledge'
 
 export async function POST(req: NextRequest) {
   try {
-    const { question } = await req.json()
+    const { question, lang = 'cz' } = await req.json()
     if (!question || typeof question !== 'string' || !question.trim()) {
-      return NextResponse.json({ error: 'Dotaz je povinný' }, { status: 400 })
+      return NextResponse.json({ error: lang === 'en' ? 'Question is required' : 'Dotaz je povinný' }, { status: 400 })
     }
 
     const items = await getAllKnowledgeItems()
@@ -36,38 +36,37 @@ export async function POST(req: NextRequest) {
     const relevantItems = topMatches.length > 0 ? topMatches : items.slice(0, 5)
 
     const contextText = relevantItems.map((it, idx) => `
-[ZDROJ #${idx + 1}]
-Název: ${it.title} (${it.channel})
-Skóre: ${it.score}/10 | P.A.R.A.: ${it.para}
+[SOURCE #${idx + 1}]
+Title: ${it.title} (${it.channel})
+Score: ${it.score}/10 | P.A.R.A.: ${it.para}
 TL;DR: ${it.tldr}
-Klíčové poznatky:
+Key Insights:
 ${it.keyPoints.map(p => ` - ${p}`).join('\n')}
-${it.actionItems.length > 0 ? `Akční kroky:\n${it.actionItems.map(a => ` - ${a}`).join('\n')}` : ''}
-Tagy: ${it.tags.join(', ')}
+${it.actionItems.length > 0 ? `Action Items:\n${it.actionItems.map(a => ` - ${a}`).join('\n')}` : ''}
+Tags: ${it.tags.join(', ')}
 `).join('\n---\n')
 
     let answerText = ''
-    let keyTakeaways: string[] = []
-    let recommendedActions: string[] = []
 
     if (process.env.GEMINI_API_KEY) {
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-        const prompt = `Jsi AIVOS — osobní Second Brain a znalostní báze pro Junior Data Engineera (Azure, Databricks, Python, AI, Claude ecosystem, P.A.R.A. v Notion).
-Odpověz na otázku uživatele na základě následujících extrahovaných znalostních záznamů z jeho databáze.
+        const targetLanguage = lang === 'en' ? 'English' : 'Czech'
+        const prompt = `You are AIVOS — personal Second Brain and knowledge base for a Junior Data Engineer (Azure, Databricks, Python, AI, Claude ecosystem, P.A.R.A. in Notion).
+Answer the user's question based on the following extracted knowledge records from their database.
 
-OTÁZKA: "${question}"
+USER QUESTION: "${question}"
 
-ZNALOSTNÍ KONTEXT ZE SECOND BRAIN:
+SECOND BRAIN KNOWLEDGE CONTEXT:
 ${contextText}
 
-Odpověz strukturovaně v češtině. Zahrň:
-1. Přímou srozumitelnou odpověď a syntézu
-2. Konkrétní odrážky s klíčovými principy/pravidly
-3. Akční kroky / doporučení
-4. Zmínku, z jakých zdrojů/videí tyto poznatky pocházejí
+Respond clearly and structurally in ${targetLanguage}. Include:
+1. Direct clear answer & synthesis
+2. Key takeaway bullet points / rules
+3. Concrete action items or SOP recommendations
+4. Attribution/mention of which sources or videos this insight comes from
 
-Formátuj srozumitelným markdownem.`
+Format with clean, readable Markdown.`
 
         const res = await ai.models.generateContent({
           model: 'gemini-2.5-flash',
@@ -82,14 +81,25 @@ Formátuj srozumitelným markdownem.`
     // Fallback if no Gemini key or offline
     if (!answerText) {
       const top = relevantItems[0]
-      answerText = `Na základě tvé znalostní báze k dotazu **"${question}"**:\n\n` +
-        `Klíčový zdroj: **${top.title}** (${top.channel}, Skóre ${top.score}/10).\n\n` +
-        `**Syntéza:**\n${top.tldr}\n\n` +
-        `**Hlavní poznatky ze znalostní báze:**\n` +
-        relevantItems.flatMap(r => r.keyPoints.slice(0, 2)).map(p => `• ${p}`).join('\n') +
-        (relevantItems.some(r => r.actionItems.length > 0)
-          ? `\n\n**Doporučené kroky:**\n` + relevantItems.flatMap(r => r.actionItems).slice(0, 3).map(a => `→ ${a}`).join('\n')
-          : '')
+      if (lang === 'en') {
+        answerText = `Based on your Second Brain knowledge base for **"${question}"**:\n\n` +
+          `Primary Source: **${top.title}** (${top.channel}, Score ${top.score}/10).\n\n` +
+          `**Synthesis:**\n${top.tldr}\n\n` +
+          `**Key Insights from Knowledge Base:**\n` +
+          relevantItems.flatMap(r => r.keyPoints.slice(0, 2)).map(p => `• ${p}`).join('\n') +
+          (relevantItems.some(r => r.actionItems.length > 0)
+            ? `\n\n**Recommended Action Steps:**\n` + relevantItems.flatMap(r => r.actionItems).slice(0, 3).map(a => `→ ${a}`).join('\n')
+            : '')
+      } else {
+        answerText = `Na základě tvé znalostní báze k dotazu **"${question}"**:\n\n` +
+          `Klíčový zdroj: **${top.title}** (${top.channel}, Skóre ${top.score}/10).\n\n` +
+          `**Syntéza:**\n${top.tldr}\n\n` +
+          `**Hlavní poznatky ze znalostní báze:**\n` +
+          relevantItems.flatMap(r => r.keyPoints.slice(0, 2)).map(p => `• ${p}`).join('\n') +
+          (relevantItems.some(r => r.actionItems.length > 0)
+            ? `\n\n**Doporučené kroky:**\n` + relevantItems.flatMap(r => r.actionItems).slice(0, 3).map(a => `→ ${a}`).join('\n')
+            : '')
+      }
     }
 
     return NextResponse.json({

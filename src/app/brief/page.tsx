@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
+import { Language, translations } from "@/lib/i18n";
 
 type BriefData = {
   date: string;
@@ -21,19 +22,42 @@ type VideoItem = {
 };
 
 export default function BriefPage() {
+  const [lang, setLang] = useState<Language>("cz");
   const [brief, setBrief] = useState<BriefData | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("latest");
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem("aivos_lang") as Language;
+      if (savedLang === "cz" || savedLang === "en") {
+        setLang(savedLang);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleSetLang = (newLang: Language) => {
+    setLang(newLang);
+    try {
+      localStorage.setItem("aivos_lang", newLang);
+    } catch {
+      // ignore
+    }
+  };
+
+  const t = translations[lang];
+
   const loadBrief = useCallback((dateKey: string) => {
     const url = dateKey === "latest" ? "/briefs/latest.json" : `/briefs/${dateKey}.json`;
     fetch(url)
       .then((r) => { if (!r.ok) throw new Error("404"); return r.json(); })
       .then((data) => setBrief(data))
-      .catch(() => setError("Brief pro toto datum není k dispozici."));
-  }, []);
+      .catch(() => setError(lang === "en" ? "Briefing for this date is not available." : "Brief pro toto datum není k dispozici."));
+  }, [lang]);
 
   useEffect(() => {
     loadBrief("latest");
@@ -52,14 +76,16 @@ export default function BriefPage() {
     }
     const utterance = new SpeechSynthesisUtterance(brief.text);
     const voices = window.speechSynthesis.getVoices();
-    const czVoice = voices.find((v) => v.lang.startsWith("cs") || v.lang.startsWith("sk"));
-    if (czVoice) utterance.voice = czVoice;
+    const voice = voices.find((v) =>
+      lang === "cz" ? (v.lang.startsWith("cs") || v.lang.startsWith("sk")) : v.lang.startsWith("en")
+    );
+    if (voice) utterance.voice = voice;
     utterance.rate = 0.95;
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(utterance);
     setSpeaking(true);
-  }, [brief, speaking]);
+  }, [brief, speaking, lang]);
 
   const switchDate = (d: string) => {
     window.speechSynthesis.cancel();
@@ -83,15 +109,33 @@ export default function BriefPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 20 }}>🧠</span>
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3b82f6" }}>
-                AIVOS Brain Brief
+                {t.briefTitle}
               </span>
             </div>
-            <Link href="/" style={{ fontSize: 12, color: "#94a3b8", textDecoration: "none", background: "rgba(255,255,255,0.06)", padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
-              ← Dashboard
-            </Link>
+            
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div className="lang-switcher" id="lang-switcher-brief">
+                <button
+                  className={`lang-btn ${lang === "cz" ? "active" : ""}`}
+                  onClick={() => handleSetLang("cz")}
+                >
+                  🇨🇿 CZ
+                </button>
+                <button
+                  className={`lang-btn ${lang === "en" ? "active" : ""}`}
+                  onClick={() => handleSetLang("en")}
+                >
+                  🇬🇧 EN
+                </button>
+              </div>
+
+              <Link href="/" style={{ fontSize: 12, color: "#94a3b8", textDecoration: "none", background: "rgba(255,255,255,0.06)", padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
+                {t.briefBackToDashboard}
+              </Link>
+            </div>
           </div>
           <div style={{ fontSize: 26, fontWeight: 700, color: "#f1f5f9", lineHeight: 1.15 }}>
-            {brief?.date ?? "Načítám..."}
+            {brief?.date ?? (lang === "en" ? "Loading..." : "Načítám...")}
           </div>
         </div>
       </div>
@@ -130,36 +174,38 @@ export default function BriefPage() {
           }}>
             <span style={{ fontSize: 22 }}>{speaking ? "⏹" : "▶"}</span>
             <span style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>
-              {speaking ? "Zastavit" : "Přehrát brief"}
+              {speaking ? t.briefStop : t.briefListen}
             </span>
           </button>
           {speaking && (
-            <div style={{ textAlign: "center", marginTop: 8, fontSize: 12, color: "#60a5fa" }}>● Přehrávám...</div>
+            <div style={{ textAlign: "center", marginTop: 8, fontSize: 12, color: "#60a5fa" }}>
+              ● {lang === "en" ? "Playing audio..." : "Přehrávám..."}
+            </div>
           )}
         </div>
 
         {brief && brief.high.length > 0 && (
           <section style={{ marginTop: 24 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#22c55e", marginBottom: 10 }}>
-              🟢 Dnes důležité
+              {lang === "en" ? "🟢 High Priority Today" : "🟢 Dnes důležité"}
             </div>
-            {brief.high.map((v, i) => <VideoCard key={i} video={v} color="#22c55e" />)}
+            {brief.high.map((v, i) => <VideoCard key={i} video={v} color="#22c55e" lang={lang} />)}
           </section>
         )}
 
         {brief && brief.medium.length > 0 && (
           <section style={{ marginTop: 20 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#eab308", marginBottom: 10 }}>
-              🟡 Zajímavé
+              {lang === "en" ? "🟡 Interesting Insights" : "🟡 Zajímavé"}
             </div>
-            {brief.medium.slice(0, 5).map((v, i) => <VideoCard key={i} video={v} color="#eab308" />)}
+            {brief.medium.slice(0, 5).map((v, i) => <VideoCard key={i} video={v} color="#eab308" lang={lang} />)}
           </section>
         )}
 
         {history.length > 1 && (
           <section style={{ marginTop: 28 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#475569", marginBottom: 10 }}>
-              Historie
+              {lang === "en" ? "History" : "Historie"}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {history.map((d) => (
@@ -183,7 +229,7 @@ export default function BriefPage() {
   );
 }
 
-function VideoCard({ video, color }: { video: VideoItem; color: string }) {
+function VideoCard({ video, color, lang = "cz" }: { video: VideoItem; color: string; lang?: Language }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{
