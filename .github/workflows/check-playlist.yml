@@ -20,11 +20,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
 
       - name: 📦 Install Dependencies
         run: |
-          pip install --no-cache-dir google-api-python-client==2.115.0 yt-dlp edge-tts anthropic
+          pip install google-api-python-client==2.115.0 yt-dlp edge-tts anthropic
 
       - name: 📡 Stage 1 – Playlist Detection
         env:
