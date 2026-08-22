@@ -1,175 +1,137 @@
 {
   "date": "2026-08-22",
-  "text": "# AIVOS Brain Brief – 22. srpna 2026\n\nAhoj Ivo, vítej v ranním brain briefu. Dnes je pátek, takže máme před sebou poslední push do víkendu. Máme pro tebe deset videí, která stojí za pozornost, a já je ti teď rozeberu tak aby ses v autě orientoval a věděl co koukat dneska nebo příští týden. Pojďme na to.\n\nTak poslouchej, dnes jsem ti připravil mix věcí. Máme tu tři videa zaměřená na tvůj career growth a networking, pak pár věcí kolem produktivity a vizualizace, a pak konkrétně do techniky máme super deep dive o SSH protokolu, kterému určitě budeš rozumět až až.\n\nOkay, pojďme do detailu.\n\nZačneme tím, co bych měl potvrdit hned na začátku. Ten seznam dnes nemá žádné high priority videa, která bys měl koukat v pátek ráno jako first thing, ale máme tady zajímavou mix věcí, které tě v různých vrstvách tvého growth posunou dál. Pět videí jsme vynechali úplně, protože prostě nesedí na tvoje core priority, ale těchto deset má smysl koukat postupně.\n\nTakže první věc, kterou ti dnes chci doporučit, je video o Excalidrawu od Karlose Obsidian Tutorials. Název je „Why 5 Million People Are OBSESSED With Excalidraw\" a je to o tom, proč se zamilovala miliónům lidí aplikace na diagramování, která je open source a absolutně jednoduše se používá. \n\nTeď si možná myslíš, že je to pouze softwarový gimmick, ale poslouchej – Excalidraw ti změní způsob, jak si budeš organizovat svý data engineering projektů. Je to ideální na to, aby si v rychlosti schematizoval data pipelines, vizualizoval si transformace, kreslil si flow jak data putují z Azure sources do tý databáze. A bez toho komplexního uživatelského rozhraní, které tě zbláznuje. Zkrátka, kreslíš jako na papíře, ale v digitálním prostředí.\n\nDruhá klíčová věc na tom videu je, že se Excalidraw super integruje do knowledge management nástrojů, které sám používáš nebo bys měl. Pokud používáš Obsidian, Notion nebo cokoli podobného, máš tam embeďování přímo. To znamená, že když si třeba vytvoříš diagram svýho Azure data lake architektury, jednoduše ho vloží do tvé poznámky a máš to pohromadě. To je důležité pro tvůj druhý mozek, protože vizualizace – a teď to spíš jako generální tip – vizualizace informací je pro mozek snadnější než čtení samé textu.\n\nTřetí věc na tom videu je i trochu terapie. Jestli jsi někdy měl problém si zapamatovat nebo si strukturovat myšlenky, vizualizace tě v tom opravdu pomůže. Video to dělá pro knowledge workers, ale ty jako junior engineer, který se učí Azure a pipelines, budeš mít stejný benefit.\n\nTakže Excalidraw – koukat to. Není to dvouhodinový deep dive, ale pár minut to bude.\n\nPříští tři videa jsou z Wandering Duchess a Kate Kirchner, a všechny jsou o tom jak se posunout v kariéře. Jedno je o tom, jak si nastavit AI prompty na to abys si mohl budovat to, co se jmenuje fractional career – to je v podstatě kombinace několika částečných pozic nebo side hustles. Druhé je o tom, proč ses kvalifikoval, ale stejně tě nebírají. Třet",
+  "text": "# AIVOS Brain Brief – Pátek, 22. srpna 2026\n\nAhoj Ivo, je pátek ráno a máš přede sebou dobrý den. Dnes jsme ti připravili pěkný mix – dva videa, která prostě musíš vidět, protože se týkají přesně toho, na čem teď pracuješ, a pak dalších šest videí, která jsou spíš takové vitamíny na cestu. Tak pojďme na to.\n\n---\n\n## HIGH RELEVANCE – VIDEA, NA KTERÁ JE POTŘEBA SOUSTŘEDIT SE\n\nZačneme s prvním videím, které si musíš vytáhnout, až budeš mít čas se na něj pořádně podívat. Jmenuje se \"Securing MCP: The AI Security Webinar You Can't Afford to Miss\" od týmu Airia AI. Vím, vím – název zní jako marketing, ale tohle je opravdu důležité a já ti řeknu proč.\n\nMCP, Model Context Protocol, to je ta infrastruktura, která se stává páteří pro AI agenty a twoje integrace s Claude v Azure. Ty teď stavíš věci, které půjdou do produkce na Konica Minoltě. V enterprise světě, kde pracuješ ty, není bezpečnost volitelná – je to povinné. Tohle video ti vysvětlí konkrétní vulnerabilities, které můžou být v tvých AI agent architekturách, a co se může pokazit, pokud si na to nebudeš dávat pozor.\n\nTři klíčové věci, které si vezmeš z toho videa. Za prvé – security patterns pro MCP, ty konkrétní postupy, jak správně isolovat a autentifikovat AI agenty, když spolu komunikují. Za druhé – best practices pro secure deployment, konkrétně jak propojit MCP s tvým Azure a Fabric stackem bez toho, aby ses něco nechtěně zranitelný. A za třetí – praktické věci pro LLMOps workflow. To je to, co se bude měnit v dalších měsících, a ty bys měl být připraven.\n\nVezmi si to jako povinné čtení, ale formátu videa. Může to být v neděli večer, když si chceš udělat tech čtení, nebo o víkendu. Ale připrav si poznámky.\n\nDruhé vysokorelevantní video je od Nick Saraeva a má titul \"What I'd Learn Instead of Automation in 2026\". Nick je kluk, který vážně ví, o čem mluví, a tohle video je zajímavé právě proto, že je trochu contrarian. Řekne ti, že ne všechno stojí za to automatizovat, a co by se měl spíš učit v 2026. Jako junior data engineer, která se chystá dál, to je dobrá perspektiva. Nedostali jsme transkript, ale na základě Nickova stylu se dá předpokládat, že bude mluvit o tom, co je bezvýchodné, co už je maturované, a kam se má posunout tvoje focus. Tohle je mindset stuff, ale je to důležitý mindset stuff.\n\n---\n\n## MEDIUM RELEVANCE – KRÁTKÝ PŘEHLED OSTATNÍCH VIDEÍ\n\nTeď střední kategorií. První je \"The Hidden Cost of Autonomous AI: You Lose Control of Production\" od The Serious CTO. Název si to sám řekne – je to kritický pohled na to, co se děje, když necháš AI běžet úplně sama bez lidské kontroly. Ty pracuješ na production pipelines a orchestracích, a tohle je důležitá lekce. Ne všechno by mělo být stoprocentně autonomous. Někdy musíš udržet tu kontrolu a human oversight. Je to půlhodinový reality check k tomu hype, kterým se všichni nechávají strhávat. Tip: posl",
   "stats": {
-    "high": 0,
-    "medium": 10,
-    "low": 5,
+    "high": 2,
+    "medium": 6,
+    "low": 7,
     "total": 15
   },
-  "high": [],
+  "high": [
+    {
+      "title": "Securing MCP: The AI Security Webinar You Can't Afford to Miss",
+      "channel": "Airia AI",
+      "url": "https://youtube.com/watch?v=dC9XO4JtRtI",
+      "summary": "Video se zaměřuje na bezpečnost MCP (Model Context Protocol) – klíčové infrastruktury pro AI agenty a Claude integraci. Jelikož Ivo pracuje s Claude ekosystémem a AI agents (TIER 1), je pochopení security best practices pro MCP zásadní pro production deployments v Azure. Bezpečnost při práci s LLM agenty je kritická pro enterprise prostředí Konica Minolty.",
+      "action": "",
+      "tags": "#MCP #Claude #AISecuritiy #LLMOps #AzureSecuritiy #AIAgents #EnterpriseSecurity",
+      "score": 9,
+      "category": "AI / WORK",
+      "key_points": [
+        "MCP security patterns a potenciální vulnerabilities v AI agent architekturách",
+        "Best practices pro secure deployment MCP s Claude a LLMOps workflow",
+        "Integrace MCP security do Azure + Fabric infrastruktury Iva"
+      ]
+    },
+    {
+      "title": "What I'd Learn Instead of Automation in 2026",
+      "channel": "Nick Saraev",
+      "url": "https://youtube.com/watch?v=YIl-awY250k",
+      "summary": "Video 'What I'd Learn Instead of Automation in 2026' od Nick Saraev. Transkript nedostupny.",
+      "action": "N/A",
+      "tags": "",
+      "score": 9,
+      "category": "AI",
+      "key_points": []
+    }
+  ],
   "medium": [
     {
-      "title": "Why 5 Million People Are OBSESSED With Excalidraw",
-      "channel": "Karlos Obsidian Tutorials",
-      "url": "https://youtube.com/watch?v=CkoGWHyLTsk",
-      "summary": "Excalidraw je open-source diagramovací nástroj, který se stal oblíbeným mezi knowledge workers a vývojáři. Je ideální pro rychlé vizualizace, mind mapy a technické schémata bez složitého UI. Výborně se integruje do druhého mozku (Obsidian, Notion) a je klíčový pro ADHD-mozek, který potřebuje vizualizaci informací.",
-      "action": "Vyzkoušet Excalidraw plugin v Obsidianu/Notion; nakreslit 1x Azure DE architecture (Data Factory → Synapse → Fabric); integrovat do PARA system jako \"Architecture sketches\"",
-      "tags": "#PKM #Excalidraw #SecondBrain #VisualThinking #ADHD-friendly #DataArchitecture #Obsidian #Notion",
+      "title": "The Hidden Cost of Autonomous AI: You Lose Control of Production",
+      "channel": "The Serious CTO",
+      "url": "https://youtube.com/watch?v=7qFIlvPGI0s",
+      "summary": "Video se zaměřuje na kritické aspekty autonomních AI systémů v produkčním prostředí – konkrétně na ztrátu kontroly a governance, kterou přináší plná automatizace bez human oversight. Relevantní pro Ivy jako Junior Data Engineera, který bude stavět pipelines a orchestrace, kde je důležité udržet kontrolu nad data flow a model outputs. Kontext \"Serious CTO\" signalizuje technical depth bez hype.",
+      "action": "",
+      "tags": "#autonomousAI #produkční-kontrola #governance #LLMOps #dataengineering #risk-management #CTO-mindset",
       "score": 7,
-      "category": "PKM",
+      "category": "WORK / AI",
       "key_points": [
-        "Excalidraw jako hand-drawn style diagram tool pro architekturu, workflows, DB schémata",
-        "Integrace s Obsidian/Notion = perfect pro second brain systemem",
-        "Open-source, FREE, offline-first – ideální pro Azure + Data Engineering diagrams (Medallion, ETL flow, pipeline architecture)",
-        "Rychlost kreslení = lepší než Lucidchart/Visio pro iterativní návrhy",
-        "Community obsessed = validace že tooling matters pro produktivitu",
-        "Excalidraw pro vizualizaci Data Factory pipelines, Databricks workflows, Event Hub architectury",
-        "ADHD hack: \"sketching before coding\" redukuje cognitive load",
-        "Export do PNG/SVG pro documentation, Confluence, Azure Wikis"
+        "Risk autonomních AI agentů v produkci – debugging a rollback jsou náročné bez audit trail",
+        "Governance + compliance: jak zajistit accountability když se rozhodnutí dělají full-autonomous",
+        "Best practice: hybrid approach (AI + human decision gates) místo pure autonomy",
+        "Relevance pro Azure Data Factory + AI agents (Tier 1 Ivy)",
+        "Zapsat si principles: \"Control ≠ micromanagement\" – autonomie s guardrails (relevantní pro LLMOps + MCP design)",
+        "Při Design Review: vždy mít jasný rollback plan a observability pro autonomous workflows",
+        "Doplnit si knowledge: MLOps/LLMOps governance patterns (přemostění Tier 1 topics)"
       ]
     },
     {
-      "title": "AI Won't Build Your Fractional Career—But These Prompts Will",
-      "channel": "Wandering Duchess",
-      "url": "https://youtube.com/watch?v=Fb4IRXPrDdw",
-      "summary": "Video se zaměřuje na praktické prompty a strategie pro budování fragmentované kariéry (fractional work) s pomocí AI nástrojů. Téma je relevantní pro Ivovu dlouhodobou vizi „growth v IT + AI + osobním životě\" a side hustle potenciál, ale není specificky zaměřeno na Ivovy core tech stacky (Azure, Data Engineering).",
-      "action": "",
-      "tags": "#AI #CareerGrowth #SideHustle #Prompting #Productivity #Automation #ADHD-productivity",
+      "title": "How I Code Apps SOLO That ACTUALLY MAKE MONEY (Full Guide)",
+      "channel": "Cole Caccamise",
+      "url": "https://youtube.com/watch?v=WoKmZNN6qLo",
+      "summary": "Video o tom, jak vytvářet aplikace a produkty, které generují skutečný příjem. Cole Caccamise pravděpodobně pokrývá praktické aspekty solo entrepreneurshipu v tech – od nápadu přes development po monetizaci. Pro juniora v DE je to relevant spíš jako mindset expansion na side hustle a pasivní příjem.",
+      "action": "Zkusit po zvládnutí TIER 1 (Azure, Python, RAG) experimentovat s malým side projectem – třeba AI automation nástroj na n8n nebo FastAPI wrapper kolem LLM pro specifický use case. Cole by měl inspirovat metodiku, ne konkrétní tech stack.",
+      "tags": "#SideHustle #Entrepreneurship #PassiveIncome #CareerGrowth #MindsetShift",
       "score": 6,
-      "category": "FINANCE / CAREER / AI",
+      "category": "FINANCE / WORK",
       "key_points": [
-        "Prompty pro automatizaci opakovaných úkolů při freelancingu/side projectech (relevantní pro produktivitu s ADHD mozkem)",
-        "Strategie na lepší work-life balance při paralelním desenvolupání více projektů",
-        "Praktické AI use-casey pro income diversifikaci (Gumroad, digitální produkty)",
-        "Projít video s fokusem na prompty aplikovatelné na Ivovy data engineering side hustly",
-        "Extrahovat konkrétní prompt templates pro automation a knowledge management",
-        "Posoudit, zda je kombinace s \"Second Brain\" systemem (Notion + PARA) pro fractional work relevantní"
+        "Princip solo building – relevantní pro Ivov potenciální AI/automation side project",
+        "Monetizace tech aplikací – applicable na budoucí private tools, Gumroad či dbt marketplace",
+        "Full-stack thinking – užitečné pro career growth směrem k senior/architect rolím"
       ]
     },
     {
-      "title": "I Was Qualified But Still Not Getting Hired: What Changed",
-      "channel": "Wandering Duchess",
-      "url": "https://youtube.com/watch?v=FfjWcb1mkqQ",
-      "summary": "Video se zaměřuje na problematiku při hledání první/další IT pozice – kvalifikace sice stačí, ale něco v procesu nefunguje. Věnuje se pravděpodobně soft skills, portfoliu, networking nebo présentation aspectům, které junior devs často podceňují. Bez transkriptu vycházím z názvu a kontextu kanálu zaměřeného na career growth.",
-      "action": "",
-      "tags": "#career #junior-to-senior #soft-skills #hiring #job-search",
+      "title": "How to Use AI Without Letting It Think for You",
+      "channel": "Don Woodlock",
+      "url": "https://youtube.com/watch?v=djGCytw0XZg",
+      "summary": "Video se zaměřuje na kritické myšlení a zdravý vztah k AI nástrojům – важné pro juniora, který se potýká s ADHD a tendencí se nechat unášet hype. Titul naznačuje praktické rady na téma autonomie při práci s AI, což je relevantní pro long-term growth v data engineering + AI roli.",
+      "action": "Aplikovat na workflow: před použitím Claude Code či Cursor si vždy ujasni *proč* AI vrací to řešení (1-2 min code review). Zaznamenat do Notion: \"AI verification checklist\" jako součást PKM.",
+      "tags": "#AI_mindset #critical_thinking #automation_vs_mastery #ADHD_decision_making #junior_growth",
       "score": 6,
-      "category": "WORK / CAREER",
+      "category": "AI / LIFE",
       "key_points": [
-        "Kvalifikace ≠ získání jobu (technické znalosti nestačí)",
-        "Pravděpodobně gap v soft skills nebo online presence",
-        "Něco se změnilo v přístupu autorky k hledání práce (nasazení, prezentace sebe)"
+        "Riziko slepého spoléhání se na AI bez ověření (relevantní pro DP-700, dbt, SQL kvalitu)",
+        "Jak si ponechat kritické myšlení a ne se stát \"AI závislým\"",
+        "Balancování automation vs. deep understanding (relevantní pro Databricks, PySpark mastery)"
       ]
     },
     {
-      "title": "How to Get More Offers: Make Hiring Managers Pick You",
-      "channel": "Kate Kirchner",
-      "url": "https://youtube.com/watch?v=_mXNp0XfTB8",
-      "summary": "Video se zaměřuje na career growth strategie pro získávání více nabídek od hiring managerů. Pro Iva jako juniora je relevantní pro dlouhodobý growth trajectory, ale není akutně prioritní před zvládnutím technických TIER 1 skills (Azure, PySpark, RAG).",
-      "action": "Přidat si do PKM/Notion sekci \"Career playbook\" – archivovat klíčové insights z videa až po zvládnutí core technical skills (Q1 2025). Nyní se zaměřit na DP-700, Databricks fundamentals.",
-      "tags": "#CareerGrowth #SoftSkills #Positioning #HiringStrategy #JuniorToMid",
+      "title": "Gemini Notebook OS Could Replace Your Entire AI Setup",
+      "channel": "Julian Goldie SEO",
+      "url": "https://youtube.com/watch?v=r5zX3tbChkw",
+      "summary": "Video o Gemini Notebook OS jako komplexním řešení pro AI workflow. Potenciálně zajímavé jako alternativa k současným Azure + Databricks setup, ale Julian Goldie fokusuje spíš na SEO/marketing než na technical depth. Bez přístupu k transkriptu je hodnocení limitované.",
+      "action": "Doplnit si transkript → pokud obsahuje konkrétní comparison s Azure Data Factory/Databricks, zvýšit prioritu na 7+. Pokud je to spíš \"clickbait + affiliate\", přeskočit.",
+      "tags": "#AI #GeminiAI #CloudNotebook #DataEngineering #AzureAlternatives",
       "score": 6,
-      "category": "WORK",
+      "category": "AI / WORK",
       "key_points": [
-        "Strategie jak se odlišit jako kandidát na trhu práce",
-        "Messaging a positioning vůči hiring managerům (soft skills pro IT career progression)",
-        "Relevantní pro transition z juniora na mid-level roli (6-12 měsíců dopředu)"
+        "Gemini Notebook OS jako \"all-in-one\" AI environment (relevantní vzhledem k tvému Azure stack, ale konkurenční)",
+        "Možná porovnání s Databricks/Synapse (tvoje TIER 1 nástroje)",
+        "SEO/marketing framing → pravděpodobně ne technical deep-dive"
       ]
     },
     {
-      "title": "Chapter 1 – What is DSA? | Every Engineer Must Know This@EnginovaXHub",
-      "channel": "EnginovaX Hub",
-      "url": "https://youtube.com/watch?v=bE13sSYvV-Q",
-      "summary": "Video o Data Structures & Algorithms (DSA) – fundamentální téma pro každého inženýra. Jako Junior Data Engineer se Ivo s DSA setkává méně v daily práci (ta je spíš Azure/SQL/PySpark), ale pro career growth a tech interviews je DSA klíčové. Pro Iva relevantní zejména při přechodu na senior role či big tech společnosti.",
-      "action": "Přidat do backlogu pro later (není urgent). Pokud Ivo plánuje transition na vyšší pozici nebo chce zpevnit foundations, kouknout během learning sprintu (ne v TIER 1 urgency zóně).",
-      "tags": "#DSA #CareerGrowth #Fundamentals #TechInterviews #DataEngineering #AzurePath",
-      "score": 6,
-      "category": "WORK",
-      "key_points": [
-        "DSA je základem efektivního kódování a optimalizace (relevantní pro PySpark jobs, Databricks transformace)",
-        "Nutné pro technical interviews v Microsoft/top tech firmách (career growth angle)",
-        "EnginovaX Hub je solidní edukační kanál, ale transkript chybí → nemůžu ověřit kvalitu konkrétního obsahu"
-      ]
-    },
-    {
-      "title": "If I Wanted to Build a Personal Brand, I'd Do This",
-      "channel": "Matt Gray",
-      "url": "https://youtube.com/watch?v=RMdcJt9gM7A",
-      "summary": "Videa o personal branding od Matt Graye se obvykle zaměřují na autentickou komunikaci, budování publika a monetizaci expertise. Pro Ivy relevantní jako side hustle strategie (data engineering content creator?) a personal branding v tech komunitě, ale není přímým technical stackem.",
-      "action": "Pokud Ivo zvažuje tech content creator cestu → sledovat; pokud ne, přeskočit. Minimálně extrahovat principles pro LinkedIn personal branding v data/AI prostoru.",
-      "tags": "#PersonalBrand #CareerGrowth #SideHustle #ContentStrategy #INTJ",
-      "score": 6,
-      "category": "LIFE / FINANCE",
-      "key_points": [
-        "Strategie budování publika bez clickbaitu (relevantní pro INTJ autentičnost)",
-        "Monetizace expertise (Gumroad, kurzy, consulting)",
-        "Konsistentní content creation systém (spojitelné s PKM/Second Brain)"
-      ]
-    },
-    {
-      "title": "Organize Files With AI: Start With Look, Don't Touch",
-      "channel": "Adam Franklin  ",
-      "url": "https://youtube.com/watch?v=_yokQzlWnYM",
-      "summary": "Video o organizaci souborů s AI asistencí, zaměřené na \"look, don't touch\" přístup – nejspíš praktický návod, jak strukturovat digitální workspace s pomocí AI nástrojů. Pro ADHD mozek relevantní (minimální friction při filování), ale bez konkrétního tech stacku (Azure, Claude, dbt) se jedná spíše o aplikační layer než core skill.",
-      "action": "Vyzkoušet workflow + prozkoumat, jestli lze integrovat s Notion/PKM stackem. Potenciálně inspirace pro strukturování knowledge repo v rámci Second Brain setupu.",
-      "tags": "#PKM #ADHD-productivity #file-organization #AI-automation #workspace-setup",
-      "score": 6,
-      "category": "PKM / ADHD / LIFE",
-      "key_points": [
-        "\"Look, don't touch\" princip = minimalizace rozhodovacích bodů (pro ADHD velmi relevantní – snížení cognitive load)",
-        "AI-asistovaná kategorizace souborů (pravděpodobně automation)",
-        "Praktická strategie pro digitální hygienia a přístup k datům"
-      ]
-    },
-    {
-      "title": "How to Find Jobs on LinkedIn Before Everyone Else (Cheat Code)",
-      "channel": "Kate Kirchner",
-      "url": "https://youtube.com/watch?v=h9MhKqPlzXs",
-      "summary": "Video se zaměřuje na LinkedIn strategie pro získání pracovních příležitostí dříve než konkurence. Pro juniora v data engineeringu může být užitečné, ale není specifické na tech skills či AI/AzureStack, který je pro Iva prioritou.",
-      "action": "",
-      "tags": "#LinkedIn #CareerGrowth #JobSearch #JuniorToSenior #NetworkingStrategy",
+      "title": "4 Low-Effort Side Hustles You Can Do at Night (No Experience Required)",
+      "channel": "Side Business Bloke",
+      "url": "https://youtube.com/watch?v=l1vx3Ue00pE",
+      "summary": "Video o nízkozátěžových vedlejších příjmech, které lze dělat večer bez předchozích zkušeností. Téma je pro Iva relevantní vzhledem k jeho zájmu o pasivní příjem a AI side hustle, ale bez konkrétního návazku na Azure/Data Engineering/AI obsah není příliš prioritní.",
+      "action": "Zhlédnout, pokud se канал zaměřuje na AI + automation side hustle (ne jen general business). Pokud jsou zmíněny konkrétní nástroje (MCP, LLM API, automation), přesunout na SCORE 7+. Jinak přeskočit v prospěch TIER 1 Azure + AI obsahu.",
+      "tags": "#side-hustle #passive-income #ADHD-friendly #evening-learning",
       "score": 5,
-      "category": "WORK / CAREER",
+      "category": "FINANCE / LIFE",
       "key_points": [
-        "LinkedIn cheat codes – timing, visibility, network leveraging",
-        "Early job discovery (ještě před oficiálním postem)",
-        "Brand building na platformě pro IT profese"
+        "Relevantní pro long-term career strategii (side income generuje finanční svobodu pro learning)",
+        "Potenciál propojit s AI automation (pokud video zmíňuje relevantní nástroje typu n8n, Zapier, LLM API)",
+        "Evening/low-effort přístup vyhovuje ADHD profilu (energie management)"
       ]
     },
     {
-      "title": "What is SSH and How SSH Works? (Full-  Deep Dive)",
-      "channel": "Bit Byte Talks",
-      "url": "https://youtube.com/watch?v=Q7IxCEvXGvc",
-      "summary": "Video o SSH protokolu – relevantní pro DevOps a bezpečný přístup k serverům, kterou Ivo bude potřebovat při práci s Azure infrastrukturou. SSH je základní nástroj pro remote management a CI/CD pipelines, které se v DP-700/AZ certifikacích objevují. Užitečné znalosti pro juniorního data engineera orientujícího se na cloud.",
-      "action": "Projít video jako referenční materiál, prakticky vyzkoušet SSH key-based auth pro Azure VM a GitHub Actions v osobním labě",
-      "tags": "#SSH #Azure #DevOps #Security #CareerGrowth",
+      "title": "How To Use Final Round AI for Interview | Step-By-Step",
+      "channel": "Ned TECH",
+      "url": "https://youtube.com/watch?v=RPnXcm2akiQ",
+      "summary": "Video se zaměřuje na praktické použití nástroje Final Round AI pro přípravu na pohovor. Nástroj obsahuje mock interviews, feedback a interview coaching. Relevantní pro Iva jako junior v procesu dlouhodobého career growthu.",
+      "action": "Prozkoumat Final Round AI jako nástroj pro přípravu na budoucí pohovory nebo pro interview coaching pro kolegy; zvážit, jak se vpisuje do career development plánu (junior → mid-level engineer). Nízká priorita teď, vysoká hodnota za 6-12 měsíců.",
+      "tags": "#career-growth #interview-prep #soft-skills #junior-to-senior",
       "score": 5,
-      "category": "WORK",
+      "category": "CAREER / LIFE",
       "key_points": [
-        "SSH jako klíčový protokol pro bezpečný přístup k Azure VM a remote resources",
-        "Praktická aplikace v GitHub Actions a automatizaci (relevantní pro AZ certifikace)",
-        "Bezpečnostní best practices relevantní pro enterprise environmenty (Konica Minolta)"
-      ]
-    },
-    {
-      "title": "Supercharge your workflow: Summarize, rephrase, and rewrite documents with Gemini in Google Docs",
-      "channel": "Google Workspace",
-      "url": "https://youtube.com/watch?v=950kb-9Qzfg",
-      "summary": "Video se zaměřuje na produktivitu v Google Docs pomocí Gemini AI. Ukazuje workflow pro sumarizaci, přeformulování a přepsání dokumentů přímo v nástrojích Google Workspace, což může být užitečné pro rychlé zpracování textů.",
-      "action": "Vyzkoušet Gemini v Google Docs pro sumarizaci poznámek z meetingů nebo dokumentace; případně porovnat s Claude API/Code pro stejný use-case a rozhodnout si, která stack se hodí lépe do tvého Azure/Claude workflow.",
-      "tags": "#AI #productivity #GoogleWorkspace #DocumentProcessing #PKM #workflow",
-      "score": 5,
-      "category": "AI / WORK / PKM",
-      "key_points": [
-        "Gemini integrace v Google Docs pro automatické sumarizace",
-        "Přeformulování textu (rephrase) pro lepší srozumitelnost nebo jiný tone",
-        "Rewrite funkcionalita pro různé styly a účely psaní",
-        "Práce s dokumenty bez opuštění prostředí Google Workspace",
-        "Gemini (ne Claude/MCP) = Tier 2",
-        "Google Docs (ne Azure/Second Brain) = okrajová priority",
-        "Bez transkriptu nelze ocenit konkrétní deep insights",
-        "Pro tvůj Azure/Notion stack by byla priorita native Azure Copilot nebo Claude-based řešení"
+        "Final Round AI poskytuje AI-powered mock interviews s real-time feedback",
+        "Nástroj simuluje technické a behaviorální otázky specifické pro roli",
+        "Integration s career development strategií pro junior → senior progression",
+        "Není zaměřeno na core tech skills (Azure, Data Engineering, AI/LLM)",
+        "\"Ned TECH\" kanál není v seznamu tier 1 zdrojů",
+        "Bez transkriptu nemohu ověřit konkrétní content value",
+        "Relevantní spíše za 6-12 měsíců než teď"
       ]
     }
   ],
